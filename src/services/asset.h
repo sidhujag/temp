@@ -52,16 +52,13 @@ bool FindAssetOwnerInTx(const CCoinsViewCache &inputs, const CTransaction& tx, c
 CWallet* GetDefaultWallet();
 CAmount GetFee(const size_t nBytes);
 bool DecodeAndParseAssetTx(const CTransaction& tx, int& op, std::vector<std::vector<unsigned char> >& vvch, char& type);
-bool DecodeAssetScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
-bool IsAssetOp(int op);
-int GenerateSyscoinGuid();
-bool IsSyscoinScript(const CScript& scriptPubKey, int &op, std::vector<std::vector<unsigned char> > &vvchArgs);
 
-bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
+int GenerateSyscoinGuid();
+
+
 void AssetTxToJSON(const int &op, const CTransaction& tx, UniValue &entry);
 void AssetTxToJSON(const int &op, const CTransaction& tx, const CAsset& dbAsset, const int& nHeight, UniValue &entry);
 std::string assetFromOp(int op);
-bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
 /** Upper bound for mantissa.
 * 10^18-1 is the largest arbitrary decimal that will fit in a signed 64-bit integer.
 * Larger integers cannot consist of arbitrary combinations of 0-9:
@@ -226,6 +223,6 @@ bool DecodeAssetTx(const CTransaction& tx, int& op, std::vector<std::vector<unsi
 extern std::unique_ptr<CAssetDB> passetdb;
 extern std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 extern std::unique_ptr<CAssetAllocationTransactionsDB> passetallocationtransactionsdb;
-extern std::unique_ptr<CAssetAllocationMempoolBalancesDB> passetallocationmempoolbalancesdb;
+extern std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 extern std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 #endif // ASSET_H

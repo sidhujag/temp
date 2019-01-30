@@ -1849,7 +1849,7 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const
                 if (op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_ALLOCATION_BURN || op == OP_ASSET_SEND) {
                     
                     CAssetAllocation assetallocation(tx);
-                    const string& strAddress = assetallocation.assetAllocationTuple.ToString();
+       
                     CCoinsViewCache inputs(pcoinsTip.get());
 
                     ownerName = assetallocation.assetAllocationTuple.witnessAddress.ToString();
@@ -1962,7 +1962,6 @@ static void ListTransactions(CWallet* const pwallet, const CWalletTx& wtx, const
                         CAssetAllocation assetallocation(tx);
                       
                         CCoinsViewCache inputs(pcoinsTip.get());
-                        const string& strAddress = assetallocation.assetAllocationTuple.ToString();
                         ownerName = assetallocation.assetAllocationTuple.witnessAddress.ToString();
                         CAsset dbAsset;
                         GetAsset(assetallocation.assetAllocationTuple.nAsset, dbAsset);

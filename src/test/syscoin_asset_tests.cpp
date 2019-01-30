@@ -18,9 +18,6 @@
 #include <math.h>
 #include <key_io.h>
 #include <univalue.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <arpa/inet.h>
 using namespace std;
 extern UniValue read_json(const std::string& jsondata);
 
@@ -615,7 +612,6 @@ BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag2)
     BOOST_CHECK_NO_THROW(r = CallRPC("node1", "assetallocationinfo " + assetguid + " burn"));
     UniValue balance = find_value(r.get_obj(), "balance");
     BOOST_CHECK_EQUAL(balance.getValStr(), "1.30000000");
-
 }
 
 BOOST_AUTO_TEST_CASE(generate_burn_syscoin_asset_zdag3)

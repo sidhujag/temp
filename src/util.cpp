@@ -103,7 +103,46 @@ const char * const SYSCOIN_PID_FILENAME = "syscoind.pid";
 ArgsManager gArgs;
 
 CTranslationInterface translationInterface;
+// SYSCOIN
+#ifdef WIN32
+    #include <windows.h>
+    #include <winnt.h>
+    #include <winternl.h>
+    #include <stdio.h>
+    #include <errno.h>
+    #include <assert.h>
+    #include <process.h>
+    pid_t fork(const std::string &app, const std::string &arg)
+    {
+        PROCESS_INFORMATION pi;
+        STARTUPINFOW si;
+        ZeroMemory(&pi, sizeof(pi));
+        ZeroMemory(&si, sizeof(si));
+        si.cb = sizeof(si);
+        //Prepare CreateProcess args
+        std::wstring app_w(app.length(), L' '); // Make room for characters
+        std::copy(app.begin(), app.end(), app_w.begin()); // Copy string to wstring.
 
+        std::wstring arg_w(arg.length(), L' '); // Make room for characters
+        std::copy(arg.begin(), arg.end(), arg_w.begin()); // Copy string to wstring.
+
+        std::wstring input = app_w + L" " + arg_w;
+        wchar_t* arg_concat = const_cast<wchar_t*>( input.c_str() );
+        const wchar_t* app_const = app_w.c_str();
+        LogPrintf("CreateProcessW app %s arg %s\n",app, arg);
+        int result = CreateProcessW(app_const, arg_concat, NULL, NULL, FALSE, 
+              0, NULL, NULL, &si, &pi);
+        if(!result)
+        {
+            LogPrintf("CreateProcess failed (%d)\n", GetLastError());
+            return 0;
+        }
+        pid_t pid = (pid_t)pi.dwProcessId;
+        CloseHandle(pi.hProcess);
+        CloseHandle(pi.hThread);
+        return pid;
+    }
+#endif
 /** Init OpenSSL library multithreading support */
 static std::unique_ptr<CCriticalSection[]> ppmutexOpenSSL;
 void locking_callback(int mode, int i, const char* file, int line) NO_THREAD_SAFETY_ANALYSIS
@@ -1071,32 +1110,143 @@ bool StartGethNode(pid_t &pid, int websocketport)
     StopGethNode(pid);
         
     fs::path fpath = fs::system_complete(gethFilename);
+    #ifndef WIN32
+            // Prevent killed child-processes remaining as "defunct"
+            struct sigaction sa;
+            sa.sa_handler = SIG_DFL;
+            sa.sa_flags = SA_NOCLDWAIT;
+          
+            sigaction( SIGCHLD, &sa, NULL ) ;
+        
+        // Duplicate ("fork") the process. Will return zero in the child
+        // process, and the child's PID in the parent (or negative on error).
+        pid = fork() ;
+        if( pid < 0 ) {
+            LogPrintf("Could not start Geth, pid < 0 %d\n", pid);
+            return false;
+        }
 
-    // Prevent killed child-processes remaining as "defunct"
-    struct sigaction sa;
-    sa.sa_handler = SIG_DFL;
-    sa.sa_flags = SA_NOCLDWAIT;
-  
-    sigaction( SIGCHLD, &sa, NULL ) ;
-
-    // Duplicate ("fork") the process. Will return zero in the child
-    // process, and the child's PID in the parent (or negative on error).
-    pid = fork() ;
-    if( pid < 0 ) {
-        LogPrintf("Could not start Geth, pid < 0 %d\n", pid);
-        return false;
-    }
-
-    if( pid == 0 ) {
+        if( pid == 0 ) {
+            std::string portStr = std::to_string(websocketport);
+            char * argv[] = {(char*)fpath.c_str(), (char*)"--rpc", (char*)"--rpcapi", (char*)"eth,net,web3,admin", (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), (char*)"--wsorigins", (char*)"*", (char*)"--syncmode", (char*)"light", NULL };
+            execvp(argv[0], &argv[0]);
+        }
+        else{
+            boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
+            ofs << pid;
+        }
+    #else
         std::string portStr = std::to_string(websocketport);
-        char * argv[] = {(char*)"--rpc", (char*)"--rpcapi", (char*)"eth,net,web3,admin", (char*)"--ws", (char*)"--wsport", (char*)portStr.c_str(), (char*)"--wsorigins", (char*)"*", (char*)"--syncmode", (char*)"light", NULL };
-        execvp(fpath.c_str(), argv);
-    }
-    else{
+        std::string args = std::string("--rpc --rpcapi eth,net,web3,admin --ws --wsport ") + portStr + std::string(" --wsorigins * --syncmode light");
+        pid = fork(fpath.string(), args);
+        if( pid <= 0 ) {
+            LogPrintf("Could not start Geth\n");
+            return false;
+        }
         boost::filesystem::ofstream ofs(GetGethPidFile(), std::ios::out | std::ios::trunc);
         ofs << pid;
-    }
+    #endif
     LogPrintf("%s: Geth Started with pid %d\n", __func__, pid);
+    return true;
+}
+
+// SYSCOIN - RELAYER
+fs::path GetRelayerPidFile()
+{
+    return AbsPathForConfigVal(fs::path("relayer.pid"));
+}
+std::string GetRelayerFilename(){
+    // For Windows:
+    #ifdef WIN32
+       return "bin/win64/relayer-win.exe";
+    #endif    
+    #ifdef MAC_OSX
+        // Mac
+        return "./bin/osx/relayer-macos";
+    #else
+        // Linux
+        return "./bin/linux/relayer-linux";
+    #endif
+}
+bool StopRelayerNode(pid_t pid)
+{
+    if(fUnitTest || fTPSTest)
+        return true;
+    if(pid){
+        try{
+            KillProcess(pid);
+            LogPrintf("%s: Relayer successfully exited from pid %d\n", __func__, pid);
+        }
+        catch(...){
+            LogPrintf("%s: Relayer failed to exit from pid %d\n", __func__, pid);
+        }
+    }
+    {
+        boost::filesystem::ifstream ifs(GetRelayerPidFile(), std::ios::in);
+        pid_t pidFile = 0;
+        while(ifs >> pidFile){
+            if(pidFile && pidFile != pid){
+                try{
+                    KillProcess(pidFile);
+                    LogPrintf("%s: Relayer successfully exited from pid %d(from relayer.pid)\n", __func__, pidFile);
+                }
+                catch(...){
+                    LogPrintf("%s: Relayer failed to exit from pid %d(from relayer.pid)\n", __func__, pidFile);
+                }
+            } 
+        }  
+    }
+    boost::filesystem::remove(GetRelayerPidFile());
+    return true;
+}
+
+bool StartRelayerNode(pid_t &pid, int websocketport)
+{
+    if(fUnitTest || fTPSTest)
+        return true;
+    LogPrintf("%s: Starting relayer...\n", __func__);
+    std::string relayerFilename = GetRelayerFilename();
+    
+    // stop any relayer process  before starting
+    StopRelayerNode(pid);
+        
+    fs::path fpath = fs::system_complete(relayerFilename);
+    #ifndef WIN32
+        // Prevent killed child-processes remaining as "defunct"
+        struct sigaction sa;
+        sa.sa_handler = SIG_DFL;
+        sa.sa_flags = SA_NOCLDWAIT;
+      
+        sigaction( SIGCHLD, &sa, NULL ) ;
+		// Duplicate ("fork") the process. Will return zero in the child
+        // process, and the child's PID in the parent (or negative on error).
+        pid = fork() ;
+        if( pid < 0 ) {
+            LogPrintf("Could not start Relayer, pid < 0 %d\n", pid);
+            return false;
+        }
+
+        if( pid == 0 ) {
+            std::string portStr = std::to_string(websocketport);
+            char * argv[] = {(char*)fpath.c_str(), (char*)"--ethwsport", (char*)portStr.c_str(), NULL };
+            execvp(argv[0], &argv[0]);
+        }
+        else{
+            boost::filesystem::ofstream ofs(GetRelayerPidFile(), std::ios::out | std::ios::trunc);
+            ofs << pid;
+        }
+    #else
+		std::string portStr = std::to_string(websocketport);
+        std::string args = std::string("--ethwsport ") + portStr);
+        pid = fork(fpath.string(), args);
+        if( pid <= 0 ) {
+            LogPrintf("Could not start Relayer\n");
+            return false;
+        }
+        boost::filesystem::ofstream ofs(GetRelayerPidFile(), std::ios::out | std::ios::trunc);
+        ofs << pid;
+	#endif
+    LogPrintf("%s: Relayer started with pid %d\n", __func__, pid);
     return true;
 }
 #ifndef WIN32

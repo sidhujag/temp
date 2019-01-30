@@ -228,7 +228,7 @@ static const unsigned int DEFAULT_CHECKLEVEL = 4;
 // full block file chunks, we need the high water mark which triggers the prune to be
 // one 128MB block file + added 15% undo data = 147MB greater for a total of 545MB
 // Setting the target to > than 550MB will make it likely we can respect the target.
-static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 5500L * 1024L * 1024L;
+static const uint64_t MIN_DISK_SPACE_FOR_BLOCK_FILES = 5767168000;
 
 /**
  * Process an incoming block. This only returns after the best known valid
@@ -329,7 +329,7 @@ bool AcceptToMemoryPool(CTxMemPool& pool, CValidationState &state, const CTransa
                         bool* pfMissingInputs, std::list<CTransactionRef>* plTxnReplaced,
                         bool bypass_limits, const CAmount nAbsurdFee, bool test_accept=false, bool bMultiThreaded=false);
 static std::vector<uint256> DEFAULT_VECTOR;
-bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock& block, bool bSanity = false, bool bMiner = false, std::vector<uint256>& txsToRemove=DEFAULT_VECTOR);
+bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState &state, const CCoinsViewCache &inputs, bool fJustCheck, bool &bOverflow, int nHeight, const CBlock& block, bool bSanity = false, bool bMiner = false, std::vector<uint256>& txsToRemove=DEFAULT_VECTOR);
 bool GetUTXOCoin(const COutPoint& outpoint, Coin& coin);
 int GetUTXOHeight(const COutPoint& outpoint);
 int GetUTXOConfirmations(const COutPoint& outpoint);

@@ -22,12 +22,14 @@
 #include <consensus/validation.h>
 #include <wallet/fees.h>
 #include <outputtype.h>
+#include <boost/thread.hpp>
 extern AssetBalanceMap mempoolMapAssetBalances;
+extern ArrivalTimesMapImpl arrivalTimesMap;
 unsigned int MAX_UPDATES_PER_BLOCK = 2;
 std::unique_ptr<CAssetDB> passetdb;
 std::unique_ptr<CAssetAllocationDB> passetallocationdb;
 std::unique_ptr<CAssetAllocationTransactionsDB> passetallocationtransactionsdb;
-std::unique_ptr<CAssetAllocationMempoolBalancesDB> passetallocationmempoolbalancesdb;
+std::unique_ptr<CAssetAllocationMempoolDB> passetallocationmempooldb;
 std::unique_ptr<CEthereumTxRootsDB> pethereumtxrootsdb;
 // SYSCOIN service rpc functions
 UniValue syscoinburn(const JSONRPCRequest& request);
@@ -52,33 +54,6 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request);
 
 using namespace std::chrono;
 using namespace std;
-
-
-bool FindSyscoinScriptOp(const CScript& script, int& op) {
-	CScript::const_iterator pc = script.begin();
-	opcodetype opcode;
-	if (!script.GetOp(pc, opcode))
-		return false;
-	if (opcode < OP_1 || opcode > OP_16)
-		return false;
-	op = CScript::DecodeOP_N(opcode);
-	return op == OP_SYSCOIN_ASSET || op == OP_SYSCOIN_ASSET_ALLOCATION || op == OP_ASSET_ALLOCATION_BURN;
-}
-bool IsSyscoinScript(const CScript& scriptPubKey, int &op, vector<vector<unsigned char> > &vvchArgs)
-{
-	if (DecodeAssetAllocationScript(scriptPubKey, op, vvchArgs))
-		return true;
-	else if (DecodeAssetScript(scriptPubKey, op, vvchArgs))
-		return true;
-	return false;
-}
-bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut)
-{
-	if (!RemoveAssetAllocationScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
-		if (!RemoveAssetScriptPrefix(scriptPubKeyIn, scriptPubKeyOut))
-			return false;
-		return true;
-}
 
 int GetSyscoinDataOutput(const CTransaction& tx) {
 	for (unsigned int i = 0; i<tx.vout.size(); i++) {
@@ -150,12 +125,7 @@ bool GetSyscoinData(const CScript &scriptPubKey, vector<unsigned char> &vchData,
 		return false;
 	return true;
 }
-bool IsAssetOp(int op) {
-    return op == OP_ASSET_ACTIVATE
-        || op == OP_ASSET_UPDATE
-        || op == OP_ASSET_TRANSFER
-		|| op == OP_ASSET_SEND;
-}
+
 
 
 string assetFromOp(int op) {
@@ -221,6 +191,7 @@ bool CMintSyscoin::UnserializeFromTx(const CTransaction &tx) {
     return true;
 }
 bool FlushSyscoinDBs() {
+    bool ret = true;
 	 {
         LogPrintf("Flushing Asset Allocation Index...size %d\n", AssetAllocationIndex.size());
 		LOCK(cs_assetallocationindex);
@@ -229,20 +200,29 @@ bool FlushSyscoinDBs() {
 			passetallocationtransactionsdb->WriteAssetAllocationWalletIndex(AssetAllocationIndex);
 			if (!passetallocationtransactionsdb->Flush()) {
 				LogPrintf("Failed to write to asset allocation transactions database!");
-				return false;
+                ret = false;
 			}
             AssetAllocationIndex.clear();
 		}
-        if (passetallocationmempoolbalancesdb != nullptr)
+        if (passetallocationmempooldb != nullptr)
         {
-            LOCK(cs_assetallocation);
-            LogPrintf("Flushing Asset Allocation Mempool Balances...size %d\n", mempoolMapAssetBalances.size());
-            passetallocationmempoolbalancesdb->WriteAssetAllocationMempoolBalances(mempoolMapAssetBalances);
-            if (!passetallocationmempoolbalancesdb->Flush()) {
-                LogPrintf("Failed to write to asset allocation mempool database!");
-                return false;
+            ResyncAssetAllocationStates();
+            {
+                LOCK(cs_assetallocation);
+                LogPrintf("Flushing Asset Allocation Mempool Balances...size %d\n", mempoolMapAssetBalances.size());
+                passetallocationmempooldb->WriteAssetAllocationMempoolBalances(mempoolMapAssetBalances);
+                mempoolMapAssetBalances.clear();
             }
-            mempoolMapAssetBalances.clear();
+            {
+                LOCK(cs_assetallocationarrival);
+                LogPrintf("Flushing Asset Allocation Arrival Times...size %d\n", arrivalTimesMap.size());
+                passetallocationmempooldb->WriteAssetAllocationMempoolArrivalTimes(arrivalTimesMap);
+                arrivalTimesMap.clear();
+            }
+            if (!passetallocationmempooldb->Flush()) {
+                LogPrintf("Failed to write to asset allocation mempool database!");
+                ret = false;
+            }            
         }
 	 }
      if (pethereumtxrootsdb != nullptr)
@@ -250,10 +230,10 @@ bool FlushSyscoinDBs() {
         if(!pethereumtxrootsdb->PruneTxRoots())
         {
             LogPrintf("Failed to write to prune Ethereum TX Roots database!");
-            return false;
+            ret = false;
         }
      }
-	return true;
+	return ret;
 }
 void CTxMemPool::removeExpiredMempoolBalances(setEntries& stage){ 
     vector<vector<unsigned char> > vvch;
@@ -266,8 +246,9 @@ void CTxMemPool::removeExpiredMempoolBalances(setEntries& stage){
             CAssetAllocation allocation(tx);
             if(allocation.assetAllocationTuple.IsNull())
                 continue;
-            if(ResetAssetAllocation(allocation.assetAllocationTuple.ToString(), tx.GetHash()))
+            if(ResetAssetAllocation(allocation.assetAllocationTuple.ToString(), tx.GetHash())){
                 count++;
+            }
         }
     }
     if(count > 0)
@@ -1062,62 +1043,6 @@ bool DecodeAssetTx(const CTransaction& tx, int& op,
 }
 
 
-bool DecodeAssetScript(const CScript& script, int& op,
-        vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
-    opcodetype opcode;
-	vvch.clear();
-    if (!script.GetOp(pc, opcode)) return false;
-    if (opcode < OP_1 || opcode > OP_16) return false;
-    op = CScript::DecodeOP_N(opcode);
-	if (op != OP_SYSCOIN_ASSET)
-		return false;
-	if (!script.GetOp(pc, opcode))
-		return false;
-	if (opcode < OP_1 || opcode > OP_16)
-		return false;
-	op = CScript::DecodeOP_N(opcode);
-	if (!IsAssetOp(op))
-		return false;
-
-	bool found = false;
-	for (;;) {
-		vector<unsigned char> vch;
-		if (!script.GetOp(pc, opcode, vch))
-			return false;
-		if (opcode == OP_DROP || opcode == OP_2DROP)
-		{
-			found = true;
-			break;
-		}
-		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
-			return false;
-		vvch.emplace_back(std::move(vch));
-	}
-
-	// move the pc to after any DROP or NOP
-	while (opcode == OP_DROP || opcode == OP_2DROP) {
-		if (!script.GetOp(pc, opcode))
-			break;
-	}
-
-	pc--;
-	return found;
-}
-bool DecodeAssetScript(const CScript& script, int& op,
-        vector<vector<unsigned char> > &vvch) {
-    CScript::const_iterator pc = script.begin();
-    return DecodeAssetScript(script, op, vvch, pc);
-}
-bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
-    int op;
-    vector<vector<unsigned char> > vvch;
-    CScript::const_iterator pc = scriptIn.begin();
-
-    if (!DecodeAssetScript(scriptIn, op, vvch, pc))
-		return false;
-	scriptOut = CScript(pc, scriptIn.end());
-	return true;
-}
 bool DisconnectAssetSend(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations){
 
     CAsset dbAsset;

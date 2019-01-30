@@ -601,5 +601,11 @@ public:
     CReserveScript() {}
     virtual ~CReserveScript() {}
 };
-
+// SYSCOIN
+bool RemoveSyscoinScript(const CScript& scriptPubKeyIn, CScript& scriptPubKeyOut);
+bool DecodeAssetScript(const CScript& script, int& op, std::vector<std::vector<unsigned char> > &vvch);
+bool RemoveAssetScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
+bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptOut);
+bool IsAssetOp(int op);
+bool IsAssetAllocationOp(int op);
 #endif // SYSCOIN_SCRIPT_SCRIPT_H

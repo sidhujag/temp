@@ -38,9 +38,7 @@ using namespace std;
 AssetAllocationIndexItemMap AssetAllocationIndex GUARDED_BY(cs_assetallocationindex);
 AssetBalanceMap mempoolMapAssetBalances GUARDED_BY(cs_assetallocation);
 ArrivalTimesMapImpl arrivalTimesMap GUARDED_BY(cs_assetallocationarrival);
-bool IsAssetAllocationOp(int op) {
-	return op == OP_ASSET_ALLOCATION_SEND || op == OP_ASSET_ALLOCATION_BURN;
-}
+
 string CWitnessAddress::ToString() const {
     if (vchWitnessProgram.size() <= 4 && stringFromVch(vchWitnessProgram) == "burn")
         return "burn";
@@ -177,68 +175,63 @@ bool DecodeAssetAllocationTx(const CTransaction& tx, int& op,
     return found;
 }
 
+void ResyncAssetAllocationStates(){ 
+    int count = 0;
+     {
+        
+        vector<string> vecToRemoveMempoolBalances;
+        LOCK2(cs_main, mempool.cs);
+        LOCK(cs_assetallocation);
+        LOCK(cs_assetallocationarrival);
+        for (auto&indexObj : mempoolMapAssetBalances) {
+            vector<uint256> vecToRemoveArrivalTimes;
+            const string& strSenderTuple = indexObj.first;
+            // if no arrival time for this mempool balance, remove it
+            auto arrivalTimes = arrivalTimesMap.find(strSenderTuple);
+            if(arrivalTimes == arrivalTimesMap.end()){
+                vecToRemoveMempoolBalances.push_back(strSenderTuple);
+                continue;
+            }
+            for(auto& arrivalTime: arrivalTimes->second){
+                const uint256& txHash = arrivalTime.first;
+                const CTransactionRef txRef = mempool.get(txHash);
+                // if mempool doesnt have txid then remove from both arrivalTime and mempool balances
+                if (!txRef){
+                    vecToRemoveArrivalTimes.push_back(txHash);
+                }
+                if(!arrivalTime.first.IsNull() && ((chainActive.Tip()->GetMedianTimePast()*1000) - arrivalTime.second) > 1800000){
+                    vecToRemoveArrivalTimes.push_back(txHash);
+                }
+            }
+            // if we are removing everything from arrivalTime map then might as well remove it from parent altogether
+            if(vecToRemoveArrivalTimes.size() >= arrivalTimes->second.size()){
+                arrivalTimesMap.erase(strSenderTuple);
+                vecToRemoveMempoolBalances.push_back(strSenderTuple);
+            } 
+            // otherwise remove the individual txids
+            else{
+                for(auto &removeTxHash: vecToRemoveArrivalTimes){
+                    arrivalTimes->second.erase(removeTxHash);
+                }
+            }         
+        }
+        count+=vecToRemoveMempoolBalances.size();
+        for(auto& senderTuple: vecToRemoveMempoolBalances){
+            mempoolMapAssetBalances.erase(senderTuple);
+            // also remove from assetAllocationConflicts
+            sorted_vector<string>::const_iterator it = assetAllocationConflicts.find(senderTuple);
+            if (it != assetAllocationConflicts.end()) {
+                assetAllocationConflicts.V.erase(const_iterator_cast(assetAllocationConflicts.V, it));
+            }
+        }       
+    }   
+    if(count > 0)
+        LogPrint(BCLog::SYS,"removeExpiredMempoolBalances removed %d expired asset allocation transactions from mempool balances\n", count);
 
-bool DecodeAssetAllocationScript(const CScript& script, int& op,
-        vector<vector<unsigned char> > &vvch, CScript::const_iterator& pc) {
-    opcodetype opcode;
-	vvch.clear();
-    if (!script.GetOp(pc, opcode)) return false;
-    if (opcode < OP_1 || opcode > OP_16) return false;
-    op = CScript::DecodeOP_N(opcode);
-	if (op != OP_SYSCOIN_ASSET_ALLOCATION)
-		return false;
-	if (!script.GetOp(pc, opcode))
-		return false;
-	if (opcode < OP_1 || opcode > OP_16)
-		return false;
-	op = CScript::DecodeOP_N(opcode);
-	if (!IsAssetAllocationOp(op))
-		return false;
-
-	bool found = false;
-	for (;;) {
-		vector<unsigned char> vch;
-		if (!script.GetOp(pc, opcode, vch))
-			return false;
-		if (opcode == OP_DROP || opcode == OP_2DROP)
-		{
-			found = true;
-			break;
-		}
-		if (!(opcode >= 0 && opcode <= OP_PUSHDATA4))
-			return false;
-		vvch.emplace_back(std::move(vch));
-	}
-
-	// move the pc to after any DROP or NOP
-	while (opcode == OP_DROP || opcode == OP_2DROP) {
-		if (!script.GetOp(pc, opcode))
-			break;
-	}
-
-	pc--;
-	return found;
 }
-bool DecodeAssetAllocationScript(const CScript& script, int& op,
-        vector<vector<unsigned char> > &vvch) {
-    CScript::const_iterator pc = script.begin();
-    return DecodeAssetAllocationScript(script, op, vvch, pc);
-}
-bool RemoveAssetAllocationScriptPrefix(const CScript& scriptIn, CScript& scriptOut) {
-    int op;
-    vector<vector<unsigned char> > vvch;
-    CScript::const_iterator pc = scriptIn.begin();
-
-    if (!DecodeAssetAllocationScript(scriptIn, op, vvch, pc))
-		return false;
-	scriptOut = CScript(pc, scriptIn.end());
-	return true;
-}
-
-bool ResetAssetAllocation(const string &senderStr, const uint256 &txHash, const bool &bMiner) {
-
+bool ResetAssetAllocation(const string &senderStr, const uint256 &txHash, const bool &bMiner, const bool& bCheckExpiryOnly) {
+    bool removeAllConflicts = true;
     if(!bMiner){
-        bool removeAllConflicts = true;
         {
             LOCK(cs_assetallocationarrival);
         	// remove the conflict once we revert since it is assumed to be resolved on POW
@@ -247,7 +240,10 @@ bool ResetAssetAllocation(const string &senderStr, const uint256 &txHash, const 
         	if(arrivalTimes != arrivalTimesMap.end()){
             	// remove only if all arrival times are either expired (30 mins) or no more zdag transactions left for this sender
             	for(auto& arrivalTime: arrivalTimes->second){
-            		if(!arrivalTime.first.IsNull() && (chainActive.Tip()->GetMedianTimePast() - arrivalTime.second) <= 1800000){
+                    // ensure mempool has the tx and its less than 30 mins old
+                    if(bCheckExpiryOnly && !mempool.get(arrivalTime.first))
+                        continue;
+            		if(!arrivalTime.first.IsNull() && ((chainActive.Tip()->GetMedianTimePast()*1000) - arrivalTime.second) <= 1800000){
             			removeAllConflicts = false;
             			break;
             		}
@@ -261,7 +257,7 @@ bool ResetAssetAllocation(const string &senderStr, const uint256 &txHash, const 
                     assetAllocationConflicts.V.erase(const_iterator_cast(assetAllocationConflicts.V, it));
                 }   
         	}
-            else{
+            else if(!bCheckExpiryOnly){
                 arrivalTimes->second.erase(txHash);
                 if(arrivalTimes->second.size() <= 0)
                     removeAllConflicts = true;
@@ -275,7 +271,7 @@ bool ResetAssetAllocation(const string &senderStr, const uint256 &txHash, const 
     }
 	
 
-	return true;
+	return removeAllConflicts;
 	
 }
 bool DisconnectMintAsset(const CTransaction &tx, AssetMap &mapAssets, AssetAllocationMap &mapAssetAllocations){
@@ -383,7 +379,7 @@ bool DisconnectAssetAllocation(const CTransaction &tx, AssetAllocationMap &mapAs
     return true; 
 }
 bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &inputs, int op, const vector<vector<unsigned char> > &vvchArgs,
-        bool fJustCheck, int nHeight, AssetAllocationMap &mapAssetAllocations, string &errorMessage, bool bSanityCheck, bool bMiner) {
+        bool fJustCheck, int nHeight, AssetAllocationMap &mapAssetAllocations, string &errorMessage, bool& bOverflow, bool bSanityCheck, bool bMiner) {
     if (passetallocationdb == nullptr)
 		return false;
 	const uint256 & txHash = tx.GetHash();
@@ -555,7 +551,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     mempoolMapAssetBalances.erase(mapBalanceSender);
                 }
             }
-            //bOverflow = true;
+            bOverflow = true;
 			errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1016 - " + _("Sender balance is insufficient");
 			return error(errorMessage.c_str());
 		}
@@ -612,7 +608,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 if(mapSenderMempoolBalanceNotFound){
                     mempoolMapAssetBalances.erase(mapBalanceSender);
                 }
-            }            
+            }
+            bOverflow = true;            
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1021 - " + _("Sender balance is insufficient");
             return error(errorMessage.c_str());
 		}
@@ -649,7 +646,7 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                 }
             }  
             else{           
-                auto result = mapAssetAllocations.try_emplace( std::move(receiverTupleStr), std::move(emptyAllocation));
+                auto result = mapAssetAllocations.try_emplace( receiverTupleStr, std::move(emptyAllocation));
                 auto mapBalanceReceiverBlock = result.first;
                 const bool& mapAssetAllocationReceiverBlockNotFound = result.second;
                 if(mapAssetAllocationReceiverBlockNotFound){
@@ -660,14 +657,10 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
                     }
                     mapBalanceReceiverBlock->second = std::move(receiverAllocation);   
                 }
-                mapBalanceReceiverBlock->second.nBalance += amountTuple.second;
-                if (!bSanityCheck) {
-                    if (!ResetAssetAllocation(mapBalanceReceiverBlock->second.assetAllocationTuple.ToString(), txHash, bMiner))
-                    {     
-                        errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Failed to revert asset allocation");
-                        return error(errorMessage.c_str());
-                    }
-                }                
+                mapBalanceReceiverBlock->second.nBalance += amountTuple.second; 
+                // to remove mempool balances but need to check to ensure that all txid's from arrivalTimes are first gone before removing receiver mempool balance
+                // otherwise one can have a conflict as a sender and send himself an allocation and clear the mempool balance inadvertently
+                ResetAssetAllocation(receiverTupleStr, txHash, bMiner);           
             }
 
 		} 	
@@ -676,11 +669,8 @@ bool CheckAssetAllocationInputs(const CTransaction &tx, const CCoinsViewCache &i
 	// asset sends are the only ones confirming without PoW
     if(!fJustCheck){
         if (!bSanityCheck) {
-            if (!ResetAssetAllocation(senderTupleStr, txHash, bMiner))
-            {
-                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR: ERRCODE: 1014 - " + _("Failed to revert asset allocation");
-                return error(errorMessage.c_str());
-            }
+            ResetAssetAllocation(senderTupleStr, txHash, bMiner);
+           
         } 
         storedSenderAllocationRef.listSendingAllocationAmounts.clear();
         storedSenderAllocationRef.nBalance = std::move(mapBalanceSenderCopy);
@@ -1240,38 +1230,19 @@ UniValue assetallocationsenderstatus(const JSONRPCRequest& request) {
 	if(!params[2].get_str().empty())
 		txid.SetHex(params[2].get_str());
 	UniValue oAssetAllocationStatus(UniValue::VOBJ);
-    LOCK2(cs_main, mempool.cs);
-    LOCK(cs_assetallocationarrival);
-    
-    const int64_t & nNow = GetTimeMillis();
 	const CAssetAllocationTuple assetAllocationTupleSender(nAsset, CWitnessAddress(witnessVersion, ParseHex(witnessProgramHex)));
-    
-    // if arrival times have expired, then expire any conflicting status for this sender as well
-    const ArrivalTimesMap &arrivalTimes = arrivalTimesMap[assetAllocationTupleSender.ToString()];
-    bool allArrivalsExpired = true;
-    for (auto& arrivalTime : arrivalTimes) {
-        // if its been less than 30m then we keep conflict status
-        if((nNow - arrivalTime.second) <= 1800000){
-            allArrivalsExpired = false;
-            break;
-        }   
-    }   
- 
-    if(allArrivalsExpired){
-        arrivalTimesMap.erase(assetAllocationTupleSender.ToString());
-        sorted_vector<string>::const_iterator it = assetAllocationConflicts.find(assetAllocationTupleSender.ToString());
-        if (it != assetAllocationConflicts.end()) {
-            assetAllocationConflicts.V.erase(const_iterator_cast(assetAllocationConflicts.V, it));
-        }        
+    {
+        LOCK2(cs_main, mempool.cs);
+        ResetAssetAllocation(assetAllocationTupleSender.ToString(), txid, false, true);
+        
+    	int nStatus = ZDAG_STATUS_OK;
+    	if (assetAllocationConflicts.find(assetAllocationTupleSender.ToString()) != assetAllocationConflicts.end())
+    		nStatus = ZDAG_MAJOR_CONFLICT;
+    	else {
+    		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid);
+    	}
+        oAssetAllocationStatus.pushKV("status", nStatus);
     }
-    
-	int nStatus = ZDAG_STATUS_OK;
-	if (assetAllocationConflicts.find(assetAllocationTupleSender.ToString()) != assetAllocationConflicts.end())
-		nStatus = ZDAG_MAJOR_CONFLICT;
-	else {
-		nStatus = DetectPotentialAssetAllocationSenderConflicts(assetAllocationTupleSender, txid);
-	}
-	oAssetAllocationStatus.pushKV("status", nStatus);
 	return oAssetAllocationStatus;
 }
 bool BuildAssetAllocationJson(const CAssetAllocation& assetallocation, const CAsset& asset, UniValue& oAssetAllocation)
@@ -1550,12 +1521,11 @@ bool CAssetAllocationTransactionsDB::ScanAssetAllocationIndex(const int count, c
     }
 	return true;
 }
-bool CAssetAllocationMempoolBalancesDB::ScanAssetAllocationMempoolBalances(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
+bool CAssetAllocationMempoolDB::ScanAssetAllocationMempoolBalances(const int count, const int from, const UniValue& oOptions, UniValue& oRes) {
     string strTxid = "";
     vector<string> vecSenders;
     vector<string> vecReceivers;
     string strAsset = "";
-    bool bParseKey = false;
     if (!oOptions.isNull()) {
        
         const UniValue &senders = find_value(oOptions, "senders");
@@ -1565,7 +1535,6 @@ bool CAssetAllocationMempoolBalancesDB::ScanAssetAllocationMempoolBalances(const
                 const UniValue &sender = sendersArray[i].get_obj();
                 const UniValue &senderStr = find_value(sender, "address");
                 if (senderStr.isStr()) {
-                    bParseKey = true;
                     vecSenders.push_back(senderStr.get_str());
                 }
             }
@@ -1820,7 +1789,7 @@ UniValue listassetallocationmempoolbalances(const JSONRPCRequest& request) {
         options = params[2];
     }
     UniValue oRes(UniValue::VARR);
-    if (!passetallocationmempoolbalancesdb->ScanAssetAllocationMempoolBalances(count, from, options, oRes))
+    if (!passetallocationmempooldb->ScanAssetAllocationMempoolBalances(count, from, options, oRes))
         throw runtime_error("SYSCOIN_ASSET_ALLOCATION_RPC_ERROR: ERRCODE: 1510 - " + _("Scan failed"));
     return oRes;
 }

@@ -133,6 +133,10 @@ std::string GetGethFilename();
 fs::path GetMasternodeConfigFile();
 bool StartGethNode(pid_t &pid,int websocketport=8546);
 bool StopGethNode(pid_t pid);
+fs::path GetRelayerPidFile();
+std::string GeteRelayerFilename();
+bool StartRelayerNode(pid_t &pid, int websocketport=8546);
+bool StopRelayerNode(pid_t pid);
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifndef WIN32

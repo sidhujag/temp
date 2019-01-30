@@ -694,7 +694,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
             errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("Burn amount must be positive");
             return state.DoS(100, false, REJECT_INVALID, errorMessage);
         }  
-        auto result = mapAssets.emplace(mintSyscoin.assetAllocationTuple.nAsset, std::move(emptyAsset));
+        auto result = mapAssets.try_emplace(mintSyscoin.assetAllocationTuple.nAsset, std::move(emptyAsset));
         auto mapAsset = result.first;
         const bool &mapAssetNotFound = result.second;
         if(mapAssetNotFound){
@@ -704,7 +704,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
         CAsset& storedSenderRef = mapAsset->second;
     
         const std::string &receiverTupleStr = mintSyscoin.assetAllocationTuple.ToString();
-        auto result1 = mapAssetAllocations.emplace(receiverTupleStr, std::move(emptyAllocation));
+        auto result1 = mapAssetAllocations.try_emplace(receiverTupleStr, std::move(emptyAllocation));
         auto mapAssetAllocation = result1.first;
         const bool &mapAssetAllocationNotFound = result1.second;
         if(mapAssetAllocationNotFound){
@@ -730,7 +730,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
     }
     return true;
 }
-bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs, bool fJustCheck, int nHeight, const CBlock& block, bool bSanity, bool bMiner, std::vector<uint256> &txsToRemove)
+bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState& state, const CCoinsViewCache &inputs, bool fJustCheck, bool &bOverflow, int nHeight, const CBlock& block, bool bSanity, bool bMiner, std::vector<uint256> &txsToRemove)
 {
     AssetAllocationMap mapAssetAllocations;
     AssetMap mapAssets;
@@ -740,6 +740,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
         nHeight = chainActive.Height()+1;   
     std::string errorMessage;
     bool good = true;
+    bOverflow=false;
     if (block.vtx.empty()) {
         if(tx.IsCoinBase())
             return true;
@@ -748,7 +749,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
             if (DecodeAssetAllocationTx(tx, op, vvchArgs))
             {
                 errorMessage.clear();
-                good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, fJustCheck, nHeight, mapAssetAllocations,errorMessage, bSanity);
+                good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, fJustCheck, nHeight, mapAssetAllocations,errorMessage, bOverflow, bSanity);
             }
             else if (DecodeAssetTx(tx, op, vvchArgs))
             {
@@ -782,7 +783,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
             {
                 errorMessage.clear();
                 // fJustCheck inplace of bSanity to preserve global structures from being changed during test calls, fJustCheck is actually passed in as false because we want to check in PoW mode
-                good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, false, nHeight, mapAssetAllocations, errorMessage, fJustCheck, bMiner);
+                good = CheckAssetAllocationInputs(tx, inputs, op, vvchArgs, false, nHeight, mapAssetAllocations, errorMessage, bOverflow, fJustCheck, bMiner);
 
             }
             else if (DecodeAssetTx(tx, op, vvchArgs))
@@ -814,7 +815,7 @@ bool CheckSyscoinInputs(const bool ibd, const CTransaction& tx, CValidationState
             mapAssets.clear();
         }        
         if (!good || !errorMessage.empty())
-            return state.DoS(100, false, REJECT_INVALID, errorMessage);
+            return state.DoS(bOverflow? 10: 100, false, REJECT_INVALID, errorMessage);
     }
     return true;
 }
@@ -889,6 +890,7 @@ static void UpdateMempoolForReorg(DisconnectedBlockTransactions &disconnectpool,
     mempool.removeForReorg(pcoinsTip.get(), chainActive.Tip()->nHeight + 1, STANDARD_LOCKTIME_VERIFY_FLAGS);
     // Re-limit mempool size, in case we added any transactions
     LimitMempoolSize(mempool, gArgs.GetArg("-maxmempool", DEFAULT_MAX_MEMPOOL_SIZE) * 1000000, gArgs.GetArg("-mempoolexpiry", DEFAULT_MEMPOOL_EXPIRY) * 60 * 60);
+           
 }
 
 // Used to avoid mempool polluting consensus critical paths if CCoinsViewMempool
@@ -1297,7 +1299,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
             control.Add(vChecks);   
             if (!control.Wait())
                 return false;
-            if (!CheckSyscoinInputs(false, tx, state, view, true, chainActive.Height(), CBlock(), test_accept)) {
+            bool bOverflow = false;
+            if (!CheckSyscoinInputs(false, tx, state, view, true, bOverflow, chainActive.Height(), CBlock(), test_accept)) {
                 LogPrint(BCLog::MEMPOOL, "%s: %s\n", "CheckSyscoinInputs Error (single-threaded)", hash.ToString());
                 return false;
             }
@@ -1367,7 +1370,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                         for (const COutPoint& hashTx : coins_to_uncache)
                             pcoinsTip->Uncache(hashTx);
                         pool.removeConflicts(txIn);
-                        pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
+                        pool.removeRecursive(txIn, MemPoolRemovalReason::SYSCOIN);
                         pool.ClearPrioritisation(hash);
                         // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits   
                         CValidationState stateDummy;
@@ -1391,8 +1394,8 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                         thisSyscoinCheckCount += 1;
                     }
                     {
-                         
-                        if (!CheckSyscoinInputs(false, txIn, validationState, coinsViewCache, true, chainActive.Height(), CBlock()))
+                        bool bOverflow = false;
+                        if (!CheckSyscoinInputs(false, txIn, validationState, coinsViewCache, true, bOverflow, chainActive.Height(), CBlock()))
                         {
                             nLastMultithreadMempoolFailure = GetTime();
                             LOCK2(cs_main, mempool.cs);
@@ -1400,8 +1403,7 @@ static bool AcceptToMemoryPoolWorker(const CChainParams& chainparams, CTxMemPool
                             for (const COutPoint& hashTx : coins_to_uncache)
                                 pcoinsTip->Uncache(hashTx);
                             pool.removeConflicts(txIn);
-                            pool.removeRecursive(txIn, MemPoolRemovalReason::UNKNOWN);
-                            
+                            pool.removeRecursive(txIn, MemPoolRemovalReason::SYSCOIN);
                             pool.ClearPrioritisation(hash);
                             // After we've (potentially) uncached entries, ensure our coins cache is still within its size limits   
                             CValidationState stateDummy;
@@ -2506,9 +2508,9 @@ bool CChainState::ConnectBlock(const CBlock& block, CValidationState& state, CBl
             }
         }
     }
-
+    bool bOverflow = false;
     // SYSCOIN
-    if (!CheckSyscoinInputs(IsInitialBlockDownload(), *block.vtx[0], state, view, fJustCheck, pindex->nHeight, block))
+    if (!CheckSyscoinInputs(IsInitialBlockDownload(), *block.vtx[0], state, view, fJustCheck, bOverflow, pindex->nHeight, block))
         return error("ConnectBlock(): CheckSyscoinInputs on block %s failed\n",
             block.GetHash().ToString());
             

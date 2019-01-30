@@ -96,6 +96,7 @@ std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
 pid_t gethPID = 0;
+pid_t relayerPID = 0;
 #if !(ENABLE_WALLET)
 class DummyWalletInit : public WalletInitInterface {
 public:
@@ -295,7 +296,7 @@ void PrepareShutdown()
     passetdb.reset();
     passetallocationdb.reset();
     passetallocationtransactionsdb.reset();
-    passetallocationmempoolbalancesdb.reset();
+    passetallocationmempooldb.reset();
     pethereumtxrootsdb.reset();
     if (threadpool)
         delete threadpool;
@@ -332,6 +333,7 @@ void PrepareShutdown()
     GetMainSignals().UnregisterBackgroundSignalScheduler();
     GetMainSignals().UnregisterWithMempoolSignals(mempool);
     // SYSCOIN
+	StopRelayerNode(relayerPID);
     StopGethNode(gethPID);
     LogPrintf("%s: done\n", __func__);
 }
@@ -1575,17 +1577,21 @@ bool AppInitMain()
                 passetdb.reset();
                 passetallocationdb.reset();
                 passetallocationtransactionsdb.reset();
-                passetallocationmempoolbalancesdb.reset();
+                passetallocationmempooldb.reset();
                 pethereumtxrootsdb.reset();
                 
                 passetdb.reset(new CAssetDB(nCoinDBCache*16, false, fReset));
                 passetallocationdb.reset(new CAssetAllocationDB(nCoinDBCache*32, false, fReset));
                 passetallocationtransactionsdb.reset(new CAssetAllocationTransactionsDB(0, false, fReset));
-                passetallocationmempoolbalancesdb.reset(new CAssetAllocationMempoolBalancesDB(0, false, fReset));
+                passetallocationmempooldb.reset(new CAssetAllocationMempoolDB(0, false, fReset));
                 {
                     LOCK(cs_assetallocation);
-                    passetallocationmempoolbalancesdb->ReadAssetAllocationMempoolBalances(mempoolMapAssetBalances);
+                    passetallocationmempooldb->ReadAssetAllocationMempoolBalances(mempoolMapAssetBalances);
                 }
+                {
+                    LOCK(cs_assetallocationarrival);
+                    passetallocationmempooldb->ReadAssetAllocationMempoolArrivalTimes(arrivalTimesMap);
+                }                
                 pethereumtxrootsdb.reset(new CEthereumTxRootsDB(nCoinDBCache*16, false, fReset));
 
                 // new CBlockTreeDB tries to delete the existing file, which
@@ -2024,6 +2030,7 @@ bool AppInitMain()
         }
     }
     StartGethNode(gethPID);
+	StartRelayerNode(relayerPID);
     
     #endif // ENABLE_WALLET
     return true;

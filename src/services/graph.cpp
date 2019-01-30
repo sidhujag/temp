@@ -20,7 +20,7 @@ bool OrderBasedOnArrivalTime(std::vector<CTransactionRef>& blockVtx) {
 		const CTransaction &tx = *txRef;
 		if (tx.nVersion == SYSCOIN_TX_VERSION_ASSET)
 		{
-			if (DecodeAssetAllocationTx(tx, op, vvchArgs) && op == OP_ASSET_ALLOCATION_SEND)
+			if (DecodeAssetAllocationTx(tx, op, vvchArgs))
 			{
 				LOCK(cs_assetallocationarrival);
 				

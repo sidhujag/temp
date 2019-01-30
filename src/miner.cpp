@@ -200,8 +200,10 @@ std::unique_ptr<CBlockTemplate> BlockAssembler::CreateNewBlock(const CScript& sc
              
     CValidationState stateInputs;
     txsToRemove.clear();
-    CheckSyscoinInputs(false, *pblock->vtx[0], stateInputs, viewOld, false, nHeight, *pblock, false, true, txsToRemove);
-    
+    bool bOverflow = false;
+    CheckSyscoinInputs(false, *pblock->vtx[0], stateInputs, viewOld, false, bOverflow, nHeight, *pblock, false, true, txsToRemove);
+    if(bOverflow)
+        ResyncAssetAllocationStates();
 
     if(!txsToRemove.empty()){
         LogPrint(BCLog::SYS, "CreateNewBlock: CheckSyscoinInputs failed removed %d transactions and trying again...\n", txsToRemove.size());
