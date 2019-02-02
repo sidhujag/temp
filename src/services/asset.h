@@ -184,10 +184,25 @@ typedef std::unordered_map<uint32_t, std::vector<unsigned char> > EthereumTxRoot
 
 class CEthereumTxRootsDB : public CDBWrapper {
 public:
-    CEthereumTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "ethereumtxroots", nCacheSize, fMemory, fWipe) {} 
+    CEthereumTxRootsDB(size_t nCacheSize, bool fMemory, bool fWipe) : CDBWrapper(GetDataDir() / "ethereumtxroots", nCacheSize, fMemory, fWipe) {
+       Init();
+    } 
     bool ReadTxRoot(const uint32_t& nHeight, std::vector<unsigned char>& vchTxRoot) {
         return Read(nHeight, vchTxRoot);
     } 
+    bool ReadCurrentHeight(uint32_t &nCurrentHeight){
+        return Read("currentheight", nCurrentHeight);
+    }
+    bool WriteCurrentHeight(const uint32_t &nCurrentHeight){
+        return Write("currentheight", nCurrentHeight);
+    }
+    bool ReadHighestHeight(uint32_t &nHighestHeight){
+         return Read("highestheight", nHighestHeight);
+    }
+    bool WriteHighestHeight(const uint32_t &nHighestHeight){
+        return Write("highestheight", nHighestHeight);
+    }
+    bool Init();
     bool PruneTxRoots();
     bool FlushErase(const std::vector<uint32_t> &vecHeightKeys);
     bool FlushWrite(const EthereumTxRootMap &mapTxRoots);

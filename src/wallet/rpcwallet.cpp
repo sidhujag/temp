@@ -4277,7 +4277,66 @@ static UniValue AddressBookDataToJSON(const CAddressBookData& data, const bool v
     ret.pushKV("purpose", data.purpose);
     return ret;
 }
+// SYSCOIN
+UniValue convertaddress(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
 
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp || request.params.size() != 1) {
+        throw std::runtime_error(
+            "convertaddress \"address\"\n"
+            "\nConvert between Syscoin 3 and Syscoin 4 formats. P2WPKH can be shown as P2PKH in Syscoin 3.\n"
+            "\nArguments:\n"
+            "1. \"address\"                    (string, required) The syscoin address to get the information of.\n"
+            "\nResult:\n"
+            "{\n"
+            "  \"v3address\" : \"address\",        (string) The syscoin 3 address validated\n"
+            "  \"v4address\" : \"address\",        (string) The syscoin 4 address validated\n"
+            "}\n"
+            "\nExamples:\n"
+            + HelpExampleCli("getaddressinfo", "\"sc1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
+            + HelpExampleRpc("getaddressinfo", "\"sc1qw40fdue7g7r5ugw0epzk7xy24tywncm26hu4a7\"")
+        );
+    }
+
+    LOCK(pwallet->cs_wallet);
+
+    UniValue ret(UniValue::VOBJ);
+    CTxDestination dest = DecodeDestination(request.params[0].get_str());
+
+    // Make sure the destination is valid
+    if (!IsValidDestination(dest)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY, "Invalid address");
+    }
+    std::string currentV4Address = "";
+    std::string currentV3Address = "";
+    if (auto witness_id = boost::get<WitnessV0KeyHash>(&dest)) {
+        currentV4Address =  EncodeDestination(dest);
+        currentV3Address =  EncodeDestination(CKeyID(*witness_id));
+    }
+    else if (auto key_id = boost::get<CKeyID>(&dest)) {
+        currentV4Address =  EncodeDestination(WitnessV0KeyHash(*key_id));
+        currentV3Address =  EncodeDestination(*key_id);
+    }
+    else if (auto script_id = boost::get<CScriptID>(&dest)) {
+        currentV4Address =  EncodeDestination(dest);
+        currentV3Address =  currentV4Address;
+    }
+    else if (auto script_id = boost::get<WitnessV0ScriptHash>(&dest)) {
+        currentV4Address =  EncodeDestination(dest);
+        currentV3Address =  currentV4Address;
+    }   
+    ret.pushKV("v3address", currentV3Address);
+    ret.pushKV("v4address", currentV4Address);
+                       
+    
+    return ret;
+}
 UniValue getaddressinfo(const JSONRPCRequest& request)
 {
     std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
@@ -4347,7 +4406,7 @@ UniValue getaddressinfo(const JSONRPCRequest& request)
 
     std::string currentAddress = EncodeDestination(dest);
     ret.pushKV("address", currentAddress);
-                       
+                           
     CScript scriptPubKey = GetScriptForDestination(dest);
     ret.pushKV("scriptPubKey", HexStr(scriptPubKey.begin(), scriptPubKey.end()));
 
@@ -5003,6 +5062,8 @@ extern UniValue tpstestadd(const JSONRPCRequest& request);
 extern UniValue tpstestsetenabled(const JSONRPCRequest& request);
 extern UniValue syscoinsetethstatus(const JSONRPCRequest& request);
 extern UniValue syscoinsetethheaders(const JSONRPCRequest& request);
+extern UniValue syscoinstartgeth(const JSONRPCRequest& request);
+extern UniValue syscoinstopgeth(const JSONRPCRequest& request);
 
 extern UniValue mnsync(const JSONRPCRequest& request);
 extern UniValue spork(const JSONRPCRequest& request);
@@ -5029,6 +5090,7 @@ static const CRPCCommand commands[] =
     { "wallet",             "dumpwallet",                       &dumpwallet,                    {"filename"} },
     { "wallet",             "encryptwallet",                    &encryptwallet,                 {"passphrase"} },
     { "wallet",             "getaddressinfo",                   &getaddressinfo,                {"address"} },
+    { "wallet",             "convertaddress",                   &convertaddress,                {"address"} },
     { "wallet",             "getbalance",                       &getbalance,                    {"account|dummy","minconf","include_watchonly"} },
     { "wallet",             "getnewaddress",                    &getnewaddress,                 {"label|account","address_type"} },
     { "wallet",             "getrawchangeaddress",              &getrawchangeaddress,           {"address_type"} },
@@ -5111,6 +5173,8 @@ static const CRPCCommand commands[] =
     { "syscoin",            "tpstestsetenabled",                &tpstestsetenabled,             {"enabled"} },
     { "syscoin",            "syscoinsetethstatus",              &syscoinsetethstatus,           {"syncing_status","highestBlock"} },
     { "syscoin",            "syscoinsetethheaders",             &syscoinsetethheaders,          {"headers"} },
+    { "syscoin",            "syscoinstopgeth",                  &syscoinstopgeth,               {} },
+    { "syscoin",            "syscoinstartgeth",                 &syscoinstartgeth,               {} },
     { "syscoin",            "mnsync",                           &mnsync,                        {} },
     { "syscoin",            "spork",                            &spork,                         {"name","value"} },
     { "syscoin",            "getgovernanceinfo",                &getgovernanceinfo,             {} },

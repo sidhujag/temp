@@ -592,7 +592,7 @@ bool CheckSyscoinMint(const bool ibd, const CTransaction& tx, CValidationState& 
             // cutoff is ~1.5 months of blocks is about 250k blocks
             cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
             if(cutoffHeight > 0 && mintSyscoin.nBlockNumber <= (uint32_t)cutoffHeight) {
-                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("The block height is too old, your SPV proof is invalid. SPV Proof must be done within ~3.5 months of the burn transaction on Ethereum blockchain");
+                errorMessage = "SYSCOIN_ASSET_ALLOCATION_CONSENSUS_ERROR ERRCODE: 1001 - " + _("The block height is too old, your SPV proof is invalid. SPV Proof must be done within ~1.5 months of the burn transaction on Ethereum blockchain");
                 return state.DoS(100, false, REJECT_INVALID, errorMessage);
             } 
             // ensure that we wait atleast ETHEREUM_CONFIRMS_REQUIRED blocks (~1 hour) before we are allowed process this mint transaction  
@@ -1795,6 +1795,8 @@ bool IsInitialBlockDownload()
         return false;
     if (fImporting || fReindex)
         return true;
+    if(!fGethSynced && !fLiteMode)
+        return true; 
     if (chainActive.Tip() == nullptr)
         return true;
     if (chainActive.Tip()->nChainWork < nMinimumChainWork)

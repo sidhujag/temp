@@ -95,8 +95,6 @@ static const bool DEFAULT_STOPAFTERBLOCKIMPORT = false;
 std::unique_ptr<CConnman> g_connman;
 std::unique_ptr<PeerLogicValidation> peerLogic;
 static CDSNotificationInterface* pdsNotificationInterface = NULL;
-pid_t gethPID = 0;
-pid_t relayerPID = 0;
 #if !(ENABLE_WALLET)
 class DummyWalletInit : public WalletInitInterface {
 public:
@@ -1806,6 +1804,8 @@ bool AppInitMain()
     
     fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
     fUnitTest = gArgs.GetBoolArg("-unittest", false);
+    // if unit test then make sure geth is shown as synced as well
+    fGethSynced = fUnitTest;
     
     fTPSTest = gArgs.GetBoolArg("-tpstest", false);
     fConcurrentProcessing = gArgs.GetBoolArg("-concurrentprocessing", true);
@@ -2030,7 +2030,10 @@ bool AppInitMain()
         }
     }
     StartGethNode(gethPID);
-	StartRelayerNode(relayerPID);
+	int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
+	const std::string& rpcuser = gArgs.GetArg("-rpcuser", "u");
+	const std::string& rpcpassword = gArgs.GetArg("-rpcpassword", "p");
+	StartRelayerNode(relayerPID, rpcport, rpcuser, rpcpassword);
     
     #endif // ENABLE_WALLET
     return true;

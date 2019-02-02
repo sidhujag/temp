@@ -112,6 +112,8 @@ TestingSetup::TestingSetup(const std::string& chainName) : BasicTestingSetup(cha
         g_connman = MakeUnique<CConnman>(0x1337, 0x1337); // Deterministic randomness for tests.
         connman = g_connman.get();
         peerLogic.reset(new PeerLogicValidation(connman, scheduler, /*enable_bip61=*/true));
+        // SYSCOIN
+        fGethSynced = true;
 }
 
 TestingSetup::~TestingSetup()

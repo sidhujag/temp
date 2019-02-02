@@ -53,9 +53,12 @@ extern bool fZMQAsset;
 extern bool fConcurrentProcessing;
 extern bool fLiteMode;
 extern uint32_t fGethSyncHeight;
+extern uint32_t fGethCurrentHeight;
 extern std::string fGethSyncStatus;
 extern bool fGethSynced;
 extern bool fLoaded;
+extern pid_t gethPID;
+extern pid_t relayerPID;
 typedef struct {
     // Values from /proc/meminfo, in KiB or converted to MiB.
     long MemTotalKiB;
@@ -132,11 +135,11 @@ void KillProcess(const pid_t& pid);
 std::string GetGethFilename();
 fs::path GetMasternodeConfigFile();
 bool StartGethNode(pid_t &pid,int websocketport=8546);
-bool StopGethNode(pid_t pid);
+bool StopGethNode(pid_t &pid);
 fs::path GetRelayerPidFile();
 std::string GeteRelayerFilename();
-bool StartRelayerNode(pid_t &pid, int websocketport=8546);
-bool StopRelayerNode(pid_t pid);
+bool StartRelayerNode(pid_t &pid, int rpcport, const std::string& rpcuser, const std::string& rpcpassword, int websocketport=8546);
+bool StopRelayerNode(pid_t &pid);
 void ClearDatadirCache();
 fs::path GetConfigFile(const std::string& confPath);
 #ifndef WIN32

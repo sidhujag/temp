@@ -1240,6 +1240,10 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             "  \"pruneheight\": xxxxxx,        (numeric) lowest-height complete block stored (only present if pruning is enabled)\n"
             "  \"automatic_pruning\": xx,      (boolean) whether automatic pruning is enabled (only present if pruning is enabled)\n"
             "  \"prune_target_size\": xxxxxx,  (numeric) the target size used by pruning (only present if automatic pruning is enabled)\n"
+            // SYSCOIN
+            "  \"geth_sync_status\": \"...\",  (string) Geth sync status, either 'waiting to sync...', 'syncing' or 'synced'\n"
+            "  \"geth_total_blocks\": xxxxxx,  (numeric) Highest block height seen on the Ethereum network. This can be thought of as the blockchain tip\n" 
+            "  \"geth_current_block\": xxxxxx,  (numeric) Current block height synced with the Ethereum network\n"            
             "  \"softforks\": [                (array) status of softforks in progress\n"
             "     {\n"
             "        \"id\": \"xxxx\",           (string) name of softfork\n"
@@ -1302,7 +1306,11 @@ UniValue getblockchaininfo(const JSONRPCRequest& request)
             obj.pushKV("prune_target_size",  nPruneTarget);
         }
     }
-
+    // SYSCOIN
+    obj.pushKV("geth_sync_status",  fGethSyncStatus);
+    obj.pushKV("geth_total_blocks",  (int)fGethSyncHeight);
+    obj.pushKV("geth_current_block",  (int)fGethCurrentHeight);
+    
     const Consensus::Params& consensusParams = Params().GetConsensus();
     CBlockIndex* tip = chainActive.Tip();
     UniValue softforks(UniValue::VARR);

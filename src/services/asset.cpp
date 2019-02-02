@@ -202,6 +202,10 @@ bool FlushSyscoinDBs() {
 				LogPrintf("Failed to write to asset allocation transactions database!");
                 ret = false;
 			}
+            if (!passetallocationtransactionsdb->Flush()) {
+                LogPrintf("Failed to write to asset allocation transactions database!");
+                ret = false;
+            }           
             AssetAllocationIndex.clear();
 		}
         if (passetallocationmempooldb != nullptr)
@@ -232,6 +236,10 @@ bool FlushSyscoinDBs() {
             LogPrintf("Failed to write to prune Ethereum TX Roots database!");
             ret = false;
         }
+        if (!pethereumtxrootsdb->Flush()) {
+            LogPrintf("Failed to write to ethereum tx root database!");
+            ret = false;
+        } 
      }
 	return ret;
 }
@@ -1445,7 +1453,7 @@ UniValue assetnew(const JSONRPCRequest& request) {
 						"<precision> Precision of balances. Must be between 0 and 8. The lower it is the higher possible max_supply is available since the supply is represented as a 64 bit integer. With a precision of 8 the max supply is 10 billion.\n"
 						"<supply> Initial supply of asset. Can mint more supply up to total_supply amount or if total_supply is -1 then minting is uncapped.\n"
 						"<max_supply> Maximum supply of this asset. Set to -1 for uncapped. Depends on the precision value that is set, the lower the precision the higher max_supply can be.\n"
-						"<update_flags> Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well)\n"
+						"<update_flags> Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all.\n"
 						"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"
 						+ HelpRequiringPassphrase(pwallet));
 	string vchAddress = params[0].get_str();
@@ -1544,7 +1552,7 @@ UniValue assetupdate(const JSONRPCRequest& request) {
                 "<contract> Ethereum token contract for SyscoinX bridge. Must be in hex and not include the '0x' format tag. For example contract '0xb060ddb93707d2bc2f8bcc39451a5a28852f8d1d' should be set as 'b060ddb93707d2bc2f8bcc39451a5a28852f8d1d'. Leave empty for no smart contract bridge.\n" 
                 "<burn_method_signature> Ethereum token contract method signature for the burn function.  Use an ABI tool in Ethereum to find this, it mst be set so that the validation code knows the burn function was called to mint assets in Syscoin from Ethereum. Must be in hex and is 4 bytes (8 characters). ie: 'fefefefe'. Leave empty for no smart contract bridge.\n"             
 				"<supply> New supply of asset. Can mint more supply up to total_supply amount or if max_supply is -1 then minting is uncapped. If greator than zero, minting is assumed otherwise set to 0 to not mint any additional tokens.\n"
-                "<update_flags> Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well)\n"
+                "<update_flags> Ability to update certain fields. Must be decimal value which is a bitmask for certain rights to update. The bitmask represents 0x01(1) to give admin status (needed to update flags), 0x10(2) for updating public data field, 0x100(4) for updating the smart contract/burn method signature fields, 0x1000(8) for updating supply, 0x10000(16) for being able to update flags (need admin access to update flags as well). 0x11111(31) for all.\n"
                 "<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"
 				+ HelpRequiringPassphrase(pwallet));
 	const int &nAsset = params[0].get_int();
@@ -2113,6 +2121,8 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     // first time we get synced, we set fGethSynced to true so that peers can start connecting
     if(!fGethSynced && fGethSyncStatus == "synced")
         fGethSynced = true;
+    if(fGethSynced)
+        fGethSyncStatus = "synced";
     UniValue ret(UniValue::VARR);
     ret.pushKV("status", "success");
     return ret;
@@ -2137,12 +2147,13 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
             if(nHeight > fGethSyncHeight)
                 fGethSyncHeight = nHeight;
         }
+        if(nHeight > fGethCurrentHeight)
+            fGethCurrentHeight = nHeight;
         string txRoot = tupleArray[1].get_str();
         boost::erase_all(txRoot, "0x");  // strip 0x
         const vector<unsigned char> &vchTxRoot = ParseHex(txRoot);
         txRootMap.try_emplace(std::move(nHeight), std::move(vchTxRoot));
-    }
-    pethereumtxrootsdb->FlushWrite(txRootMap);
+    } 
     UniValue ret(UniValue::VARR);
     ret.pushKV("status", "success");
     return ret;
@@ -2159,10 +2170,10 @@ bool CEthereumTxRootsDB::PruneTxRoots() {
         LOCK(cs_ethsyncheight);
         // cutoff is ~1.5 months of blocks is about 250k blocks
         cutoffHeight = fGethSyncHeight - MAX_ETHEREUM_TX_ROOTS;
-    }
-    if(cutoffHeight < 0){
-        LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fGethSyncHeight);
-        return true;
+        if(cutoffHeight < 0){
+            LogPrint(BCLog::SYS, "Nothing to prune fGethSyncHeight = %d\n", fGethSyncHeight);
+            return true;
+        }
     }
     std::vector<unsigned char> txPos;
     while (pcursor->Valid()) {
@@ -2177,8 +2188,21 @@ bool CEthereumTxRootsDB::PruneTxRoots() {
             return error("%s() : deserialize error", __PRETTY_FUNCTION__);
         }
     }
+    {
+        LOCK(cs_ethsyncheight);
+        WriteHighestHeight(fGethSyncHeight);
+    }
+    
+    WriteCurrentHeight(fGethCurrentHeight);      
     FlushErase(vecHeightKeys);
     return true;
+}
+bool CEthereumTxRootsDB::Init(){
+    {
+        LOCK(cs_ethsyncheight);
+        ReadHighestHeight(fGethSyncHeight);
+    }
+    ReadCurrentHeight(fGethCurrentHeight);
 }
 bool CEthereumTxRootsDB::FlushErase(const std::vector<uint32_t> &vecHeightKeys){
     if(vecHeightKeys.empty())

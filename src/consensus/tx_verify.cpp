@@ -226,9 +226,6 @@ bool Consensus::CheckTxInputs(const CTransaction& tx, CValidationState& state, c
                 REJECT_INVALID, "bad-txns-premature-spend-of-coinbase",
                 strprintf("tried to spend coinbase at depth %d", nSpendHeight - coin.nHeight));
         }
-         // SYSCOIN
-        if(!coin.IsCoinBase() && tx.vin[i].scriptWitness.IsNull()) 
-             return state.DoS(10, false, REJECT_NONSTANDARD, "non-witness");
                  
         // Check for negative or overflow input values
         nValueIn += coin.out.nValue;
