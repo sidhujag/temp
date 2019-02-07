@@ -107,9 +107,7 @@ private:
 
   /** Merkle tree index of the aux block header in the coinbase.  */
   int nChainIndex;
-
-  /** Parent block header (on which the real PoW is done).  */
-  CPureBlockHeader parentBlock;
+  
 
   /**
    * Check a merkle branch.  This used to be in CBlock, but was removed
@@ -123,7 +121,8 @@ private:
   friend class auxpow_tests::CAuxPowForTest;
 
 public:
-
+  /** Parent block header (on which the real PoW is done).  */
+  CPureBlockHeader parentBlock;
   /* Prevent accidental conversion.  */
   inline explicit CAuxPow (CTransactionRef txIn)
     : coinbaseTx (txIn)

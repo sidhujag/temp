@@ -1813,7 +1813,6 @@ bool AppInitMain()
     fAssetAllocationIndex = gArgs.GetBoolArg("-assetallocationindex", false);
     fZMQAssetAllocation = gArgs.IsArgSet("-zmqpubassetallocation");
     fZMQAsset = gArgs.IsArgSet("-zmqpubassetrecord");
-    // TODO: masternode should have no wallet
 
     //lite mode disables all Syscoin-specific functionality
     fLiteMode = gArgs.GetBoolArg("-litemode", false);
@@ -1821,11 +1820,7 @@ bool AppInitMain()
     if(fLiteMode) {
         InitWarning(_("You are starting in lite mode, all masternode-specific functionality is disabled."));
     }
-
-    if((!fLiteMode && g_txindex)
-       && chainparams.NetworkIDString() != CBaseChainParams::REGTEST) { // TODO remove this when pruning is fixed. See https://github.com/syscoinpay/syscoin/pull/1817 and https://github.com/syscoinpay/syscoin/pull/1743
-        return InitError(_("Transaction index can't be disabled in full mode. Either start with -litemode command line switch or enable transaction index."));
-    }
+    
 
     if(fLiteMode && fMasternodeMode) {
         return InitError(_("You can not start a masternode in lite mode."));
@@ -1835,14 +1830,14 @@ bool AppInitMain()
         LogPrintf("MASTERNODE:\n");
         meminfo_t memInfo = parse_meminfo();
         LogPrintf("Total Memory(MB) %d (Total Free %d) Swap Total(MB) %d (Total Free %d)\n", memInfo.MemTotalMiB, memInfo.MemAvailableMiB, memInfo.SwapTotalMiB, memInfo.SwapFreeMiB);
-        if(memInfo.MemTotalMiB < 4000)
+        if(memInfo.MemTotalMiB < 3900)
             return InitError(_("Insufficient memory, you need atleast 4GB RAM to run a masternode and be running in a Unix OS. Please see documentation."));
-        if(memInfo.MemTotalMiB < 8000 && memInfo.SwapTotalMiB < 4000)
+        if(memInfo.MemTotalMiB < 7900 && memInfo.SwapTotalMiB < 3900)
             return InitError(_("Insufficient swap memory, you need atleast 4GB swap RAM to run a masternode and be running in a Unix OS. Please see documentation."));           
         LogPrintf("Total number of physical cores found %d\n", boost::thread::physical_concurrency());
         if(boost::thread::physical_concurrency() < 2)
             return InitError(_("Insufficient CPU cores, you need atleast 2 cores to run a masternode. Please see documentation."));
-
+            
         bool isRunning = (0 == ::system("pgrep syscoind > /dev/null"));
         if(isRunning)
             return InitError(_("Only one syscoind instance is allowed to run.")); 

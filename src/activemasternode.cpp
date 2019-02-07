@@ -183,7 +183,12 @@ void CActiveMasternode::ManageStateInitial(CConnman& connman)
 
     // Check socket connectivity
     LogPrint(BCLog::MN, "CActiveMasternode::ManageStateInitial -- Checking inbound connection to '%s'\n", service.ToString());
-    SOCKET hSocket;
+    SOCKET hSocket = INVALID_SOCKET;
+    hSocket = CreateSocket(service);
+    if (hSocket == INVALID_SOCKET) {
+         LogPrint(BCLog::MN, "CActiveMasternode::ManageStateInitial -- Could not create socket '%s'\n", service.ToString());
+         return;
+    }
     bool fConnected = ConnectSocketDirectly(service, hSocket, nConnectTimeout, true) && IsSelectableSocket(hSocket);
     CloseSocket(hSocket);
 

@@ -2101,6 +2101,41 @@ UniValue listassets(const JSONRPCRequest& request) {
 		throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Scan failed"));
 	return oRes;
 }
+
+UniValue syscoinstopgeth(const JSONRPCRequest& request) {
+    const UniValue &params = request.params;
+    if (request.fHelp || 0 != params.size())
+        throw runtime_error("syscoinstopgeth\n"
+            "Stops Geth and the relayer from running.\n");
+    if(!StopRelayerNode(relayerPID))
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
+    if(!StopGethNode(gethPID))
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop Geth"));
+    UniValue ret(UniValue::VARR);
+    ret.pushKV("status", "success");
+    return ret;
+}
+UniValue syscoinstartgeth(const JSONRPCRequest& request) {
+    const UniValue &params = request.params;
+    if (request.fHelp || 0 != params.size())
+        throw runtime_error("syscoinstartgeth\n"
+            "Starts Geth and the relayer.\n");
+    
+    StopRelayerNode(relayerPID);
+    StopGethNode(gethPID);
+    
+    if(!StartGethNode(gethPID))
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not start Geth"));
+    int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
+    const std::string& rpcuser = gArgs.GetArg("-rpcuser", "u");
+    const std::string& rpcpassword = gArgs.GetArg("-rpcpassword", "p");
+    if(!StartRelayerNode(relayerPID, rpcport, rpcuser, rpcpassword))
+        throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
+    
+    UniValue ret(UniValue::VARR);
+    ret.pushKV("status", "success");
+    return ret;
+}
 UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     const UniValue &params = request.params;
     if (request.fHelp || 2 != params.size())
@@ -2117,12 +2152,9 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
         LOCK(cs_ethsyncheight);
         fGethSyncHeight = highestBlock;
     }
-    fGethSyncStatus = status;
-    // first time we get synced, we set fGethSynced to true so that peers can start connecting
-    if(!fGethSynced && fGethSyncStatus == "synced")
-        fGethSynced = true;
-    if(fGethSynced)
-        fGethSyncStatus = "synced";
+    fGethSyncStatus = status;        
+    fGethSynced = fGethSyncStatus == "synced";
+
     UniValue ret(UniValue::VARR);
     ret.pushKV("status", "success");
     return ret;

@@ -43,6 +43,7 @@ using namespace std;
 #include <services/assetallocation.h>
 #include <services/asset.h>
 #include <rpc/governance.cpp>
+#include <rpc/masternode.cpp>
 #include <base58.h>
 #include <bech32.h>
 static const std::string WALLET_ENDPOINT_BASE = "/wallet/";
@@ -5154,7 +5155,7 @@ static const CRPCCommand commands[] =
     { "syscoin",            "syscoindecoderawtransaction",      &syscoindecoderawtransaction,   {}},
     { "syscoin",            "syscoinlistreceivedbyaddress",     &syscoinlistreceivedbyaddress,  {}},
 
-    /* assets using the blockchain, coins/points/service backed tokens*/
+    /* masternodes + assets using the blockchain, coins/points/service backed tokens*/
     { "syscoin",            "assetnew",                         &assetnew,                      {"address","public value","contract","burn_method_signature","precision","supply","max_supply","update_flags","witness"}},
     { "syscoin",            "assetupdate",                      &assetupdate,                   {"asset","public value","contract","burn_method_signature","supply","update_flags","witness"}},
     { "syscoin",            "addressbalance",                   &addressbalance,                {}},
@@ -5174,13 +5175,17 @@ static const CRPCCommand commands[] =
     { "syscoin",            "syscoinsetethstatus",              &syscoinsetethstatus,           {"syncing_status","highestBlock"} },
     { "syscoin",            "syscoinsetethheaders",             &syscoinsetethheaders,          {"headers"} },
     { "syscoin",            "syscoinstopgeth",                  &syscoinstopgeth,               {} },
-    { "syscoin",            "syscoinstartgeth",                 &syscoinstartgeth,               {} },
+    { "syscoin",            "syscoinstartgeth",                 &syscoinstartgeth,              {} },
     { "syscoin",            "mnsync",                           &mnsync,                        {} },
     { "syscoin",            "spork",                            &spork,                         {"name","value"} },
     { "syscoin",            "getgovernanceinfo",                &getgovernanceinfo,             {} },
     { "syscoin",            "getsuperblockbudget",              &getsuperblockbudget,           {"index"} },
     { "syscoin",            "gobject",                          &gobject,                       {} },
-    { "syscoin",            "voteraw",                          &voteraw,                       {"masternode-tx-hash","tx_index","governance-hash","vote-signal","vote","time","vote-sig"} },   
+    { "syscoin",            "voteraw",                          &voteraw,                       {"masternode-tx-hash","tx_index","governance-hash","vote-signal","vote","time","vote-sig"} },  
+    { "syscoin",            "masternode",                       &masternode,                    {"command","data"} },
+    { "syscoin",            "masternodelist",                   &masternodelist,                {"mode","filter"} },
+    { "syscoin",            "masternodebroadcast",              &masternodebroadcast,           {"command","data"} },
+    { "syscoin",            "sentinelping",                     &sentinelping,                  {"version"} }, 
     { "generating",         "generate",                         &generate,                      {"nblocks","maxtries"} },
     { "mining",             "getauxblock",                      &getauxblock,                   {"hash","auxpow"} },
 };

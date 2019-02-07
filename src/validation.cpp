@@ -1566,28 +1566,19 @@ bool GetTransaction(const uint256& hash, CTransactionRef& txOut, const Consensus
 
 bool CheckProofOfWork(const CBlockHeader& block, const Consensus::Params& params)
 {
-    /* Except for legacy blocks with full version 1, ensure that
-       the chain ID is correct.  Legacy blocks are not allowed since
-       the merge-mining start, which is checked in AcceptBlockHeader
-       where the height is known.  */
-    if (!block.IsLegacy() && params.fStrictChainId
+    // SYSCOIN
+    /* Ensure that the chain ID is correct. */
+    if (params.fStrictChainId
         && block.GetChainId() != params.nAuxpowChainId)
         return error("%s : block does not have our chain ID"
                      " (got %d, expected %d, full nVersion %d)",
                      __func__, block.GetChainId(),
                      params.nAuxpowChainId, block.nVersion);
 
-    /* If there is no auxpow, just check the block hash.  */
+    /* If there is no auxpow, error.  */
     if (!block.auxpow)
     {
-        if (block.IsAuxpow())
-            return error("%s : no auxpow on block with auxpow version",
-                         __func__);
-
-        if (!CheckProofOfWork(block.GetHash(), block.nBits, params))
-            return error("%s : non-AUX proof of work failed", __func__);
-
-        return true;
+        return error("%s : block does not auxpow information", __func__);
     }
 
     /* We have auxpow.  Check it.  */
@@ -1732,7 +1723,7 @@ bool ReadRawBlockFromDisk(std::vector<uint8_t>& block, const CBlockIndex* pindex
 CAmount GetBlockSubsidy(unsigned int nHeight, const Consensus::Params& consensusParams, CAmount &nTotalRewardWithMasternodes, bool fSuperblockPartOnly, bool fMasternodePartOnly, unsigned int nStartHeight)
 {
     if (nHeight == 0)
-        return 8.88*COIN;
+        return 50*COIN;
     if (nHeight == 1)
     {
         // SYSCOIN 3 snapshot

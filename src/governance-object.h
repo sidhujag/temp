@@ -36,7 +36,7 @@ static const int GOVERNANCE_OBJECT_PROPOSAL = 1;
 static const int GOVERNANCE_OBJECT_TRIGGER = 2;
 static const int GOVERNANCE_OBJECT_WATCHDOG = 3;
 
-static const CAmount GOVERNANCE_PROPOSAL_FEE_TX = (100.0*COIN);
+static const CAmount GOVERNANCE_PROPOSAL_FEE_TX = (1000.0*COIN);
 
 static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS = 1;
@@ -141,13 +141,12 @@ private:
 
     /// time this object was marked for deletion
     int64_t nDeletionTime;
-
-    /// fee-tx
-    uint256 nCollateralHash;
-
+    
+    /// transaction collateral for the fee
+    CTransactionRef txCollateral;
+    
     /// Data field - can be used for anything
     std::vector<unsigned char> vchData;
-
     /// Masternode info for signed objects
     COutPoint masternodeOutpoint;
     std::vector<unsigned char> vchSig;
@@ -191,7 +190,7 @@ private:
 public:
     CGovernanceObject();
 
-    CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nHeight, const uint256& nCollateralHashIn, const std::string& strDataHexIn);
+    CGovernanceObject(const uint256& nHashParentIn, int nRevisionIn, int64_t nHeight, const CTransactionRef& txCollateralIn, const std::string& strDataHexIn);
 
     CGovernanceObject(const CGovernanceObject& other);
 
@@ -208,11 +207,12 @@ public:
     int GetObjectType() const {
         return nObjectType;
     }
-
-    const uint256& GetCollateralHash() const {
-        return nCollateralHash;
+    const uint256 GetCollateralHash() const {
+        return txCollateral->GetHash();
+    }   
+    const CTransactionRef& GetCollateral() const {
+        return txCollateral;
     }
-
     const COutPoint& GetMasternodeOutpoint() const {
         return masternodeOutpoint;
     }
@@ -307,7 +307,7 @@ public:
         READWRITE(nHashParent);
         READWRITE(nRevision);
         READWRITE(nTime);
-        READWRITE(nCollateralHash);
+        READWRITE(txCollateral);
         // using new format directly
         READWRITE(vchData);
         

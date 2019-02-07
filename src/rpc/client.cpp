@@ -206,7 +206,7 @@ static const CRPCConvertParam vRPCConvertParams[] =
     { "assetsend", 0, "asset" },
     { "assetsend", 1, "inputs" },
     { "assetinfo", 0, "asset" },
-   
+    { "sentinelping", 0, "version" },
     { "listassets", 0, "count" },
     { "listassets", 1, "from" },
     { "listassets", 2, "options" },

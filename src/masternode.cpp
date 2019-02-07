@@ -118,7 +118,7 @@ CMasternode::CollateralStatus CMasternode::CheckCollateral(const COutPoint& outp
         return COLLATERAL_INVALID_AMOUNT;
     }
 
-    if(pubkey == CPubKey() || coin.out.scriptPubKey != GetScriptForDestination(GetDestinationForKey(pubkey, OutputType::BECH32))) {
+    if(pubkey == CPubKey() || coin.out.scriptPubKey != GetScriptForDestination(pubkey.GetID())) {
         return COLLATERAL_INVALID_PUBKEY;
     }
 
@@ -319,7 +319,7 @@ void CMasternode::UpdateLastPaid(const CBlockIndex *pindex, int nMaxBlocksToScan
     const CBlockIndex *BlockReading = pindex;
 	
 	const CChainParams& chainparams = Params();
-    CScript mnpayee = GetScriptForDestination(GetDestinationForKey(pubKeyCollateralAddress, OutputType::BECH32));
+    CScript mnpayee = GetScriptForDestination(pubKeyCollateralAddress.GetID());
     // LogPrint(BCLog::MNPAYMENT, "CMasternode::UpdateLastPaidBlock -- searching for block with payment to %s\n", outpoint.ToStringShort());
 
     LOCK(cs_mapMasternodeBlocks);
@@ -461,7 +461,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
     }
 
     CScript pubkeyScript;
-    pubkeyScript = GetScriptForDestination(GetDestinationForKey(pubKeyCollateralAddress, OutputType::BECH32));
+    pubkeyScript = GetScriptForDestination(pubKeyCollateralAddress.GetID());
 
     if(pubkeyScript.size() != 25) {
         LogPrint(BCLog::MN, "CMasternodeBroadcast::SimpleCheck -- pubKeyCollateralAddress has the wrong size\n");
@@ -470,7 +470,7 @@ bool CMasternodeBroadcast::SimpleCheck(int& nDos)
     }
 
     CScript pubkeyScript2;
-    pubkeyScript2 = GetScriptForDestination(GetDestinationForKey(pubKeyMasternode, OutputType::BECH32));
+    pubkeyScript2 = GetScriptForDestination(pubKeyMasternode.GetID());
 
     if(pubkeyScript2.size() != 25) {
         LogPrint(BCLog::MN, "CMasternodeBroadcast::SimpleCheck -- pubKeyMasternode has the wrong size\n");
@@ -857,7 +857,7 @@ void CMasternodePing::Relay(CConnman& connman)
 
 std::string CMasternodePing::GetSentinelString() const
 {
-    return nSentinelVersion >= DEFAULT_SENTINEL_VERSION ? SafeIntVersionToString(nSentinelVersion) : "Unknown";
+    return nSentinelVersion >= DEFAULT_SENTINEL_VERSION ? FormatVersion(nSentinelVersion) : "Unknown";
 }
 
 std::string CMasternodePing::GetDaemonString() const

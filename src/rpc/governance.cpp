@@ -120,8 +120,7 @@ UniValue gobject(const JSONRPCRequest& request)
 
         int64_t nTime = GetAdjustedTime();
         std::string strDataHex = request.params[1].get_str();
-
-        CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
+        CGovernanceObject govobj(hashParent, nRevision, nTime, CTransactionRef(), strDataHex);
 
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
             CProposalValidator validator(strDataHex);
@@ -159,7 +158,7 @@ UniValue gobject(const JSONRPCRequest& request)
         if(request.params[1].get_str() == "0") {
             hashParent = uint256();
         } else {
-            hashParent = ParseHashV(request.params[1], "fee-txid, parameter 1");
+            hashParent = ParseHashV(request.params[1], "parent object hash, parameter 1");
         }
 
         std::string strRevision = request.params[2].get_str();
@@ -169,8 +168,7 @@ UniValue gobject(const JSONRPCRequest& request)
         std::string strDataHex = request.params[4].get_str();
 
         // CREATE A NEW COLLATERAL TRANSACTION FOR THIS SPECIFIC OBJECT
-
-        CGovernanceObject govobj(hashParent, nRevision, nTime, uint256(), strDataHex);
+        CGovernanceObject govobj(hashParent, nRevision, nTime, CTransactionRef(), strDataHex);
 
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
             CProposalValidator validator(strDataHex);
@@ -207,13 +205,13 @@ UniValue gobject(const JSONRPCRequest& request)
             throw JSONRPCError(RPC_INTERNAL_ERROR, "CommitTransaction failed! Reason given: " + state.GetRejectReason());
         }
 
-        DBG( std::cout << "gobject: prepare "
+        /*DBG( std::cout << "gobject: prepare "
              << " GetDataAsPlainString = " << govobj.GetDataAsPlainString()
              << ", hash = " << govobj.GetHash().GetHex()
-             << ", txidFee = " << tx->GetHash().GetHex()
-             << std::endl; );
+             << ", txid  = " << tx->GetHash().GetHex()
+             << std::endl; );*/
 
-        return tx->GetHash().ToString();
+        return EncodeHexTx(*tx);
     }
 #endif // ENABLE_WALLET
 
@@ -221,7 +219,7 @@ UniValue gobject(const JSONRPCRequest& request)
     if(strCommand == "submit")
     {
         if ((request.params.size() < 5) || (request.params.size() > 6))  {
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject submit <parent-hash> <revision> <time> <data-hex> <fee-txid>'");
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Correct usage is 'gobject submit <parent-hash> <revision> <time> <data-hex> <fee-tx>'");
         }
 
         if(!masternodeSync.IsBlockchainSynced()) {
@@ -230,18 +228,21 @@ UniValue gobject(const JSONRPCRequest& request)
 
         bool fMnFound = mnodeman.Has(activeMasternode.outpoint);
 
-        DBG( std::cout << "gobject: submit activeMasternode.pubKeyMasternode = " << activeMasternode.pubKeyMasternode.GetHash().ToString()
+        /*DBG( std::cout << "gobject: submit activeMasternode.pubKeyMasternode = " << activeMasternode.pubKeyMasternode.GetHash().ToString()
              << ", outpoint = " << activeMasternode.outpoint.ToStringShort()
              << ", params.size() = " << request.params.size()
-             << ", fMnFound = " << fMnFound << std::endl; );
+             << ", fMnFound = " << fMnFound << std::endl; );*/
 
         // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
-        uint256 txidFee;
-
+        CMutableTransaction txFee;
         if(request.params.size() == 6) {
-            txidFee = ParseHashV(request.params[5], "fee-txid, parameter 6");
+            if(!DecodeHexTx(txFee, request.params[5].get_str(), false, true))
+                DecodeHexTx(txFee, request.params[5].get_str(), true, true);
         }
+        CTransactionRef txCollateral = MakeTransactionRef(txFee);  
+        if(txCollateral->IsNull())
+            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid collateral transaction");  
         uint256 hashParent;
         if(request.params[1].get_str() == "0") { // attach to root node (root node doesn't really exist, but has a hash of zero)
             hashParent = uint256();
@@ -256,14 +257,13 @@ UniValue gobject(const JSONRPCRequest& request)
         int nRevision = atoi(strRevision);
         int64_t nTime = atoi64(strTime);
         std::string strDataHex = request.params[4].get_str();
+        CGovernanceObject govobj(hashParent, nRevision, nTime, txCollateral, strDataHex);
 
-        CGovernanceObject govobj(hashParent, nRevision, nTime, txidFee, strDataHex);
-
-        DBG( std::cout << "gobject: submit "
+        /*DBG( std::cout << "gobject: submit "
              << " GetDataAsPlainString = " << govobj.GetDataAsPlainString()
              << ", hash = " << govobj.GetHash().GetHex()
-             << ", txidFee = " << txidFee.GetHex()
-             << std::endl; );
+             << ", txidFee = " << tx.GetHash().GetHex()
+             << std::endl; );*/
 
         if(govobj.GetObjectType() == GOVERNANCE_OBJECT_PROPOSAL) {
             CProposalValidator validator(strDataHex);
@@ -290,7 +290,7 @@ UniValue gobject(const JSONRPCRequest& request)
         else {
             if(request.params.size() != 6) {
                 LogPrint(BCLog::GOBJECT, "gobject(submit) -- Object submission rejected because fee tx not provided\n");
-                throw JSONRPCError(RPC_INVALID_PARAMETER, "The fee-txid parameter must be included to submit this type of object");
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "The fee-tx parameter must be included to submit this type of object");
             }
         }
 
