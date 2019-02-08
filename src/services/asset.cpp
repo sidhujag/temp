@@ -2111,7 +2111,7 @@ UniValue syscoinstopgeth(const JSONRPCRequest& request) {
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
     if(!StopGethNode(gethPID))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop Geth"));
-    UniValue ret(UniValue::VARR);
+    UniValue ret(UniValue::VOBJ);
     ret.pushKV("status", "success");
     return ret;
 }
@@ -2133,7 +2133,7 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     if(!StartRelayerNode(relayerPID, rpcport, rpcuser, rpcpassword, wsport))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
     
-    UniValue ret(UniValue::VARR);
+    UniValue ret(UniValue::VOBJ);
     ret.pushKV("status", "success");
     return ret;
 }
@@ -2156,7 +2156,7 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     fGethSyncStatus = status;        
     fGethSynced = fGethSyncStatus == "synced";
 
-    UniValue ret(UniValue::VARR);
+    UniValue ret(UniValue::VOBJ);
     ret.pushKV("status", "success");
     return ret;
 }
@@ -2187,7 +2187,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         const vector<unsigned char> &vchTxRoot = ParseHex(txRoot);
         txRootMap.try_emplace(std::move(nHeight), std::move(vchTxRoot));
     } 
-    UniValue ret(UniValue::VARR);
+    UniValue ret(UniValue::VOBJ);
     ret.pushKV("status", "success");
     return ret;
 }
