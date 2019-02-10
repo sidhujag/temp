@@ -594,6 +594,8 @@ void SetupServerArgs()
     gArgs.AddArg("-rpcthreads=<n>", strprintf("Set the number of threads to service RPC calls (default: %d)", DEFAULT_HTTP_THREADS), false, OptionsCategory::RPC);
     gArgs.AddArg("-rpcuser=<user>", "Username for JSON-RPC connections", false, OptionsCategory::RPC);
     gArgs.AddArg("-rpcworkqueue=<n>", strprintf("Set the depth of the work queue to service RPC calls (default: %d)", DEFAULT_HTTP_WORKQUEUE), true, OptionsCategory::RPC);
+    gArgs.AddArg("-gethwebsocketport=<port>", strprintf("Listen for GETH Web Socket connections on <port> for the relayer (default: %u)", 8546), false, OptionsCategory::RPC);
+    gArgs.AddArg("-gethtestnet", strprintf("Connect to Ethereum Rinkeby testnet network (default: %d)", false), false, OptionsCategory::RPC);
     gArgs.AddArg("-server", "Accept command line and JSON-RPC commands", false, OptionsCategory::RPC);
 
 #if HAVE_DECL_DAEMON
@@ -1320,6 +1322,8 @@ bool AppInitLockDataDirectory()
 bool AppInitMain()
 {
     const CChainParams& chainparams = Params();
+    // SYSCOIN
+    fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
     // ********************************************************* Step 4a: application initialization
 #ifndef WIN32
     CreatePidFile(GetPidFile(), getpid());
@@ -1802,7 +1806,7 @@ bool AppInitMain()
         uiInterface.NotifyBlockTip.disconnect(BlockNotifyGenesisWait);
     }
     
-    fMasternodeMode = gArgs.GetBoolArg("-masternode", false);
+    
     fUnitTest = gArgs.GetBoolArg("-unittest", false);
     // if unit test then make sure geth is shown as synced as well
     fGethSynced = fUnitTest;
@@ -1825,7 +1829,6 @@ bool AppInitMain()
     if(fLiteMode && fMasternodeMode) {
         return InitError(_("You can not start a masternode in lite mode."));
     }
-    
     if(fMasternodeMode) {
         LogPrintf("MASTERNODE:\n");
         meminfo_t memInfo = parse_meminfo();
@@ -1838,9 +1841,6 @@ bool AppInitMain()
         if(boost::thread::physical_concurrency() < 2)
             return InitError(_("Insufficient CPU cores, you need atleast 2 cores to run a masternode. Please see documentation."));
             
-        bool isRunning = (0 == ::system("pgrep syscoind > /dev/null"));
-        if(isRunning)
-            return InitError(_("Only one syscoind instance is allowed to run.")); 
                
         std::string strMasterNodePrivKey = gArgs.GetArg("-masternodeprivkey", "");
         if(!strMasterNodePrivKey.empty()) {
@@ -2024,11 +2024,13 @@ bool AppInitMain()
             LogPrintf("  %s %s - locked successfully\n", mne.getTxHash(), mne.getOutputIndex());
         }
     }
-    StartGethNode(gethPID);
+    int wsport = gArgs.GetArg("-gethwebsocketport", 8546);
+    bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
+    StartGethNode(gethPID, bGethTestnet, wsport);
 	int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
 	const std::string& rpcuser = gArgs.GetArg("-rpcuser", "u");
 	const std::string& rpcpassword = gArgs.GetArg("-rpcpassword", "p");
-	StartRelayerNode(relayerPID, rpcport, rpcuser, rpcpassword);
+	StartRelayerNode(relayerPID, rpcport, rpcuser, rpcpassword, wsport);
     
     #endif // ENABLE_WALLET
     return true;

@@ -134,7 +134,7 @@ fs::path GetGethPidFile();
 void KillProcess(const pid_t& pid);
 std::string GetGethFilename();
 fs::path GetMasternodeConfigFile();
-bool StartGethNode(pid_t &pid,int websocketport=8546);
+bool StartGethNode(pid_t &pid, bool bGethTestnet = false, int websocketport=8546);
 bool StopGethNode(pid_t &pid);
 fs::path GetRelayerPidFile();
 std::string GeteRelayerFilename();

@@ -1585,7 +1585,7 @@ bool CAssetAllocationDB::ScanAssetAllocations(const int count, const int from, c
 			nAsset = boost::lexical_cast<uint32_t>(assetObj.get_int());
 		}
 
-		const UniValue &owners = find_value(oOptions, "receivers");
+		const UniValue &owners = find_value(oOptions, "addresses");
 		if (owners.isArray()) {
 			const UniValue &ownersArray = owners.get_array();
 			for (unsigned int i = 0; i < ownersArray.size(); i++) {
@@ -1707,10 +1707,10 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 			"[options]        (array, optional) A json object with options to filter results\n"
 			"    {\n"
 			"	   \"asset\":guid					(number) Asset GUID to filter.\n"
-			"	   \"receivers\"					(array) a json array with receivers\n"
+			"	   \"addresses\"					(array) a json array with addresses owning allocations\n"
 			"		[\n"
 			"			{\n"
-			"				\"address\":string		(string) Receiver address to filter.\n"
+			"				\"address\":string		(string) Address to filter.\n"
 			"			} \n"
 			"			,...\n"
 			"		]\n"
@@ -1718,7 +1718,7 @@ UniValue listassetallocations(const JSONRPCRequest& request) {
 			+ HelpExampleCli("listassetallocations", "0")
 			+ HelpExampleCli("listassetallocations", "10 10")
 			+ HelpExampleCli("listassetallocations", "0 0 '{\"asset\":92922}'")
-			+ HelpExampleCli("listassetallocations", "0 0 '{\"receivers\":[{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
+			+ HelpExampleCli("listassetallocations", "0 0 '{\"addresses\":[{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"},{\"address\":\"SfaMwYY19Dh96B9qQcJQuiNykVRTzXMsZR\"}]}'")
 		);
 	UniValue options;
 	int count = 10;

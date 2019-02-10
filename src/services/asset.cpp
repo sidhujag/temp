@@ -1641,7 +1641,7 @@ UniValue assettransfer(const JSONRPCRequest& request) {
     if (request.fHelp || params.size() != 3)
         throw runtime_error(
 			"assettransfer [asset] [address] [witness]\n"
-						"Transfer a asset allocation you own to another address.\n"
+						"Transfer an asset you own to another address.\n"
 						"<asset> Asset guid.\n"
 						"<address> Address to transfer to.\n"
 						"<witness> Witness address that will sign for web-of-trust notarization of this transaction.\n"	
@@ -2111,7 +2111,7 @@ UniValue syscoinstopgeth(const JSONRPCRequest& request) {
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
     if(!StopGethNode(gethPID))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop Geth"));
-    UniValue ret(UniValue::VARR);
+    UniValue ret(UniValue::VOBJ);
     ret.pushKV("status", "success");
     return ret;
 }
@@ -2123,16 +2123,17 @@ UniValue syscoinstartgeth(const JSONRPCRequest& request) {
     
     StopRelayerNode(relayerPID);
     StopGethNode(gethPID);
-    
-    if(!StartGethNode(gethPID))
+    int wsport = gArgs.GetArg("-gethwebsocketport", 8546);
+    bool bGethTestnet = gArgs.GetBoolArg("-gethtestnet", false);
+    if(!StartGethNode(gethPID, bGethTestnet, wsport))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not start Geth"));
     int rpcport = gArgs.GetArg("-rpcport", BaseParams().RPCPort());
     const std::string& rpcuser = gArgs.GetArg("-rpcuser", "u");
     const std::string& rpcpassword = gArgs.GetArg("-rpcpassword", "p");
-    if(!StartRelayerNode(relayerPID, rpcport, rpcuser, rpcpassword))
+    if(!StartRelayerNode(relayerPID, rpcport, rpcuser, rpcpassword, wsport))
         throw runtime_error("SYSCOIN_ASSET_RPC_ERROR: ERRCODE: 2512 - " + _("Could not stop relayer"));
     
-    UniValue ret(UniValue::VARR);
+    UniValue ret(UniValue::VOBJ);
     ret.pushKV("status", "success");
     return ret;
 }
@@ -2155,7 +2156,7 @@ UniValue syscoinsetethstatus(const JSONRPCRequest& request) {
     fGethSyncStatus = status;        
     fGethSynced = fGethSyncStatus == "synced";
 
-    UniValue ret(UniValue::VARR);
+    UniValue ret(UniValue::VOBJ);
     ret.pushKV("status", "success");
     return ret;
 }
@@ -2186,7 +2187,7 @@ UniValue syscoinsetethheaders(const JSONRPCRequest& request) {
         const vector<unsigned char> &vchTxRoot = ParseHex(txRoot);
         txRootMap.try_emplace(std::move(nHeight), std::move(vchTxRoot));
     } 
-    UniValue ret(UniValue::VARR);
+    UniValue ret(UniValue::VOBJ);
     ret.pushKV("status", "success");
     return ret;
 }

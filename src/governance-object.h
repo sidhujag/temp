@@ -36,7 +36,7 @@ static const int GOVERNANCE_OBJECT_PROPOSAL = 1;
 static const int GOVERNANCE_OBJECT_TRIGGER = 2;
 static const int GOVERNANCE_OBJECT_WATCHDOG = 3;
 
-static const CAmount GOVERNANCE_PROPOSAL_FEE_TX = (1000.0*COIN);
+static const CAmount GOVERNANCE_PROPOSAL_FEE_TX = (250.0*COIN);
 
 static const int64_t GOVERNANCE_FEE_CONFIRMATIONS = 6;
 static const int64_t GOVERNANCE_MIN_RELAY_FEE_CONFIRMATIONS = 1;
@@ -208,7 +208,10 @@ public:
         return nObjectType;
     }
     const uint256 GetCollateralHash() const {
-        return txCollateral->GetHash();
+        if(!txCollateral->IsNull())
+            return txCollateral->GetHash();
+        else
+            return uint256();
     }   
     const CTransactionRef& GetCollateral() const {
         return txCollateral;

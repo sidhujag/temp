@@ -236,13 +236,15 @@ UniValue gobject(const JSONRPCRequest& request)
         // ASSEMBLE NEW GOVERNANCE OBJECT FROM USER PARAMETERS
 
         CMutableTransaction txFee;
+        CTransactionRef txCollateral = MakeTransactionRef(txFee);
         if(request.params.size() == 6) {
             if(!DecodeHexTx(txFee, request.params[5].get_str(), false, true))
                 DecodeHexTx(txFee, request.params[5].get_str(), true, true);
+            txCollateral = MakeTransactionRef(txFee);  
+            if(txCollateral->IsNull())
+                throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid collateral transaction");  
         }
-        CTransactionRef txCollateral = MakeTransactionRef(txFee);  
-        if(txCollateral->IsNull())
-            throw JSONRPCError(RPC_INVALID_PARAMETER, "Invalid collateral transaction");  
+
         uint256 hashParent;
         if(request.params[1].get_str() == "0") { // attach to root node (root node doesn't really exist, but has a hash of zero)
             hashParent = uint256();

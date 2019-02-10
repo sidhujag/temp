@@ -12,9 +12,8 @@
 #include "utilstrencodings.h"
 
 #include <boost/algorithm/string.hpp>
-#include <boost/multiprecision/cpp_dec_float.hpp>
 #include <univalue.h>
-using namespace boost::multiprecision;
+
 // DECLARE GLOBAL VARIABLES FOR GOVERNANCE CLASSES
 CGovernanceTriggerManager triggerman;
 
@@ -529,9 +528,6 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
     // bootstrapping period
     else {
         /*  
-            Compound Interest Equation
-            A = P(1 + r/n)nt
-            therefor: P = A / (1 + r/n)nt
             A = Accrued Amount (principal + interest)
             P = Principal Amount
             r = Annual Monthly Interest Rate as a decimal
@@ -539,11 +535,11 @@ CAmount CSuperblock::GetPaymentsLimit(int nBlockHeight)
             t = Time Involved in months(superblock number).
             n = number of compounding periods per unit t; at the END of each period (1 in our case)
         */
-        const cpp_dec_float_50& A = cpp_dec_float_50(2000000.0*COIN);
-        const cpp_dec_float_50& r = cpp_dec_float_50(0.05);
-        const cpp_dec_float_50& t = cpp_dec_float_50(nSuperblock);
-        const cpp_dec_float_50& P = A / boost::multiprecision::pow(cpp_dec_float_50(1.0) + r, t);
-        nPaymentsLimit = P.convert_to<CAmount>();  
+        const double& A = 2000000.0*COIN;
+        const double& r = 0.05;
+        const double& t = (double)nSuperblock - 1;
+        const double& P = A * pow(1.0 - r, t);
+        nPaymentsLimit = (CAmount)P; 
     }
     LogPrint(BCLog::GOBJECT, "CSuperblock::GetPaymentsLimit -- Valid superblock height %d, payments max %lld\n", nBlockHeight, nPaymentsLimit);
 
@@ -591,19 +587,6 @@ void CSuperblock::ParsePaymentSchedule(const std::string& strPaymentAddresses, c
             LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
             throw std::runtime_error(ostr.str());
         }
-        /*
-            TODO
-
-            - There might be an issue with multisig in the coinbase on mainnet, we will add support for it in a future release.
-            - Post 12.3+ (test multisig coinbase transaction)
-        */
-        if(boost::get<CScriptID>(&address) || boost::get<WitnessV0ScriptHash>(&address)) {
-            std::ostringstream ostr;
-            ostr << "CSuperblock::ParsePaymentSchedule -- Script addresses are not supported yet : " <<  vecParsed1[i];
-            LogPrint(BCLog::GOBJECT, "%s\n", ostr.str());
-            throw std::runtime_error(ostr.str());
-        }
-        
 
         CAmount nAmount = ParsePaymentAmount(vecParsed2[i]);
 
