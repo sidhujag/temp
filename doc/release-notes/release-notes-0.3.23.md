@@ -1,4 +1,4 @@
-﻿Win32, Linux, MacOSX and source releases for syscoin v0.3.23 have been uploaded to
+Win32, Linux, MacOSX and source releases for syscoin v0.3.23 have been uploaded to
 https://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.3.23/
 
 This is another quick bugfix release, trying to deal with the influx of new syscoin users.

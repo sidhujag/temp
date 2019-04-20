@@ -1,4 +1,4 @@
-﻿Version 0.3.14 is now available
+Version 0.3.14 is now available
 http://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.3.14/
 
 Changes:

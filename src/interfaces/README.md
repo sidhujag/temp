@@ -1,4 +1,4 @@
-﻿# Internal c++ interfaces
+# Internal c++ interfaces
 
 The following interfaces are defined here:
 

@@ -1,4 +1,4 @@
-﻿Benchmarking
+Benchmarking
 ============
 
 Syscoin Core has an internal benchmarking framework, with benchmarks

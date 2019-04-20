@@ -1,4 +1,4 @@
-﻿Building Syscoin Core with Visual Studio
+Building Syscoin Core with Visual Studio
 ========================================
 
 Introduction

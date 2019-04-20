@@ -1,4 +1,4 @@
-﻿Translations
+Translations
 ============
 
 The Syscoin-Core project has been designed to support multiple localisations. This makes adding new phrases, and completely new languages easily achievable. For managing all application translations, Syscoin-Core makes use of the Transifex online translation management tool.

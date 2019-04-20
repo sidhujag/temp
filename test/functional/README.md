@@ -1,4 +1,4 @@
-﻿# Functional tests
+# Functional tests
 
 ### Writing Functional Tests
 

@@ -1,4 +1,4 @@
-﻿Repository Tools
+Repository Tools
 ---------------------
 
 ### [Developer tools](/contrib/devtools) ###

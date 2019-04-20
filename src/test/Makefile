@@ -1,4 +1,4 @@
-﻿all:
+all:
 	$(MAKE) -C .. syscoin_test
 clean:
 	$(MAKE) -C .. syscoin_test_clean

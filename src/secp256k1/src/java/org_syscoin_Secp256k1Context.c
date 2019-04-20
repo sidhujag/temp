@@ -1,4 +1,4 @@
-﻿#include <stdlib.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include "org_syscoin_Secp256k1Context.h"
 #include "include/secp256k1.h"

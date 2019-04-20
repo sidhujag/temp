@@ -1,4 +1,4 @@
-﻿# TOR SUPPORT IN SYSCOIN
+# TOR SUPPORT IN SYSCOIN
 
 It is possible to run Syscoin Core as a Tor hidden service, and connect to such services.
 

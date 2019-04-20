@@ -1,4 +1,4 @@
-﻿Fuzz-testing Syscoin Core
+Fuzz-testing Syscoin Core
 ==========================
 
 A special test harness in `src/test/fuzz/` is provided for each fuzz target to

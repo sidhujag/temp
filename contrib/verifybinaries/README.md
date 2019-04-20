@@ -1,4 +1,4 @@
-﻿### Verify Binaries
+### Verify Binaries
 
 #### Preparation:
 

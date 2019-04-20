@@ -1,4 +1,4 @@
-﻿package org.syscoin;
+package org.syscoin;
 
 import com.google.common.io.BaseEncoding;
 import java.util.Arrays;

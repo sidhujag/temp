@@ -1,4 +1,4 @@
-﻿### TestGen ###
+### TestGen ###
 
 Utilities to generate test vectors for the data-driven Syscoin tests.
 

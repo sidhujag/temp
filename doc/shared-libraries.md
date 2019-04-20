@@ -1,4 +1,4 @@
-﻿Shared Libraries
+Shared Libraries
 ================
 
 ## syscoinconsensus

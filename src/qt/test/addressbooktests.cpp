@@ -1,4 +1,4 @@
-﻿#include <qt/test/addressbooktests.h>
+#include <qt/test/addressbooktests.h>
 #include <qt/test/util.h>
 #include <test/test_syscoin.h>
 

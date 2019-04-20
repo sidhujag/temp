@@ -1,4 +1,4 @@
-﻿Contributing to Syscoin Core
+Contributing to Syscoin Core
 ============================
 
 The Syscoin Core project operates an open contributor model where anyone is

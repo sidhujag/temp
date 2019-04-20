@@ -1,4 +1,4 @@
-﻿Translation Strings Policy
+Translation Strings Policy
 ===========================
 
 This document provides guidelines for internationalization of the Syscoin Core software.

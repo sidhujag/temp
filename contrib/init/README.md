@@ -1,4 +1,4 @@
-﻿Sample configuration files for:
+Sample configuration files for:
 ```
 SystemD: syscoind.service
 Upstart: syscoind.conf

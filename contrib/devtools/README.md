@@ -1,4 +1,4 @@
-﻿Contents
+Contents
 ========
 This directory contains tools for developers working on this repository.
 

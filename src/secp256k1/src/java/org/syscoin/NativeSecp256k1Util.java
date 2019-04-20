@@ -1,4 +1,4 @@
-﻿/*
+/*
  * Copyright 2014-2016 the libsecp256k1 contributors
  *
  * Licensed under the Apache License, Version 2.0 (the "License");

@@ -1,4 +1,4 @@
-﻿OpenBSD build guide
+OpenBSD build guide
 ======================
 (updated for OpenBSD 6.4)
 

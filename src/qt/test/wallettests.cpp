@@ -1,4 +1,4 @@
-﻿#include <qt/test/wallettests.h>
+#include <qt/test/wallettests.h>
 #include <qt/test/util.h>
 
 #include <init.h>

@@ -1,4 +1,4 @@
-﻿Developer Notes
+Developer Notes
 ===============
 
 <!-- markdown-toc start -->

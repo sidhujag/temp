@@ -1,4 +1,4 @@
-﻿Syscoin version 0.4.0 is now available for download at:
+Syscoin version 0.4.0 is now available for download at:
 http://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.4.0/
 
 The main feature in this release is wallet private key encryption;

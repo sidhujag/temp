@@ -1,4 +1,4 @@
-﻿Building Syscoin
+Building Syscoin
 ================
 
 See doc/build-*.md for instructions on building the various

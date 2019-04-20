@@ -1,4 +1,4 @@
-﻿---
+---
 name: "syscoin-win-signer"
 suites:
 - "bionic"

@@ -1,4 +1,4 @@
-﻿Syscoin-Qt version 0.8.4 is now available from:
+Syscoin-Qt version 0.8.4 is now available from:
   http://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.8.4/
 
 This is a maintenance release to fix a critical bug and three

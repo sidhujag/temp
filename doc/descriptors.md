@@ -1,4 +1,4 @@
-﻿# Support for Output Descriptors in Syscoin Core
+# Support for Output Descriptors in Syscoin Core
 
 Since Syscoin Core v0.17, there is support for Output Descriptors. This is a
 simple language which can be used to describe collections of output scripts.

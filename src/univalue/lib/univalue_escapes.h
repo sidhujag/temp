@@ -1,4 +1,4 @@
-﻿// Automatically generated file. Do not modify.
+// Automatically generated file. Do not modify.
 #ifndef SYSCOIN_UNIVALUE_UNIVALUE_ESCAPES_H
 #define SYSCOIN_UNIVALUE_UNIVALUE_ESCAPES_H
 static const char *escapes[256] = {

@@ -1,4 +1,4 @@
-﻿Productivity Notes
+Productivity Notes
 ==================
 
 Table of Contents

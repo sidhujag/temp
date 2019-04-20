@@ -1,4 +1,4 @@
-﻿FreeBSD build guide
+FreeBSD build guide
 ======================
 (updated for FreeBSD 12.0)
 

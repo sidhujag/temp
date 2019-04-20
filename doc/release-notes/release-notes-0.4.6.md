@@ -1,4 +1,4 @@
-﻿syscoind version 0.4.6 is now available for download at:
+syscoind version 0.4.6 is now available for download at:
 Windows: installer | zip (sig)
 Source: tar.gz
 syscoind and Syscoin-Qt version 0.6.0.7 are also tagged in git, but it is recommended to upgrade to 0.6.1.

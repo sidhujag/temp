@@ -1,4 +1,4 @@
-﻿# PSBT Howto for Syscoin Core
+# PSBT Howto for Syscoin Core
 
 Since Syscoin Core 0.17, an RPC interface exists for Partially Signed Syscoin
 Transactions (PSBTs, as specified in

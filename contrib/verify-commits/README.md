@@ -1,4 +1,4 @@
-﻿Tooling for verification of PGP signed commits
+Tooling for verification of PGP signed commits
 ----------------------------------------------
 
 This is an incomplete work in progress, but currently includes a pre-push hook

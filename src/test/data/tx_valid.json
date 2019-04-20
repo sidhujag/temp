@@ -1,4 +1,4 @@
-﻿[
+[
 ["The following are deserialized transactions which are valid."],
 ["They are in the form"],
 ["[[[prevout hash, prevout index, prevout scriptPubKey, amount?], [input 2], ...],"],

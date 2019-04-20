@@ -1,4 +1,4 @@
-﻿dist_man1_MANS=
+dist_man1_MANS=
 
 if BUILD_SYSCOIND
   dist_man1_MANS+=syscoind.1

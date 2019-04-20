@@ -1,4 +1,4 @@
-﻿WINDOWS BUILD NOTES
+WINDOWS BUILD NOTES
 ====================
 
 Below are some notes on how to build Syscoin Core for Windows.

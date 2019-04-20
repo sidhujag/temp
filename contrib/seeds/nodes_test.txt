@@ -1,4 +1,4 @@
-﻿# List of fixed seed nodes for testnet
+# List of fixed seed nodes for testnet
 
 # Onion nodes
 thfsmmn2jsyscoin.onion

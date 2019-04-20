@@ -1,4 +1,4 @@
-﻿// Taken from https://gist.github.com/arvidsson/7231973
+// Taken from https://gist.github.com/arvidsson/7231973
 
 #ifndef SYSCOIN_REVERSE_ITERATOR_H
 #define SYSCOIN_REVERSE_ITERATOR_H

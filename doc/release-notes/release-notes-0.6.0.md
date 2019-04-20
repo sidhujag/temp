@@ -1,4 +1,4 @@
-﻿Syscoin version 0.6.0 is now available for download at:
+Syscoin version 0.6.0 is now available for download at:
 http://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.6.0/test/
 
 This release includes more than 20 language localizations.

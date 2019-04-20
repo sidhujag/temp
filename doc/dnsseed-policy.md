@@ -1,4 +1,4 @@
-﻿Expectations for DNS Seed operators
+Expectations for DNS Seed operators
 ====================================
 
 Syscoin Core attempts to minimize the level of trust in DNS seeds,

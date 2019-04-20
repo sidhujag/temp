@@ -1,4 +1,4 @@
-﻿Syscoin version 0.4.1 is now available for download at:
+Syscoin version 0.4.1 is now available for download at:
 http://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.4.1/
 
 This is a bugfix only release based on 0.4.0.

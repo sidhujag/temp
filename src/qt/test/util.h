@@ -1,4 +1,4 @@
-﻿#ifndef SYSCOIN_QT_TEST_UTIL_H
+#ifndef SYSCOIN_QT_TEST_UTIL_H
 #define SYSCOIN_QT_TEST_UTIL_H
 
 #include <QString>

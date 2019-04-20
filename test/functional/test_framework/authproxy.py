@@ -1,4 +1,4 @@
-﻿# Copyright (c) 2011 Jeff Garzik
+# Copyright (c) 2011 Jeff Garzik
 #
 # Previous copyright, from python-jsonrpc/jsonrpc/proxy.py:
 #

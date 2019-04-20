@@ -1,4 +1,4 @@
-﻿Release Process
+Release Process
 ====================
 
 Before every release candidate:

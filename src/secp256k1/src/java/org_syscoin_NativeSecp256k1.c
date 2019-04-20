@@ -1,4 +1,4 @@
-﻿#include <stdlib.h>
+#include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
 #include "org_syscoin_NativeSecp256k1.h"

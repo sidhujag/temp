@@ -1,4 +1,4 @@
-﻿Sample init scripts and service configuration for syscoind
+Sample init scripts and service configuration for syscoind
 ==========================================================
 
 Sample scripts and configuration files for systemd, Upstart and OpenRC

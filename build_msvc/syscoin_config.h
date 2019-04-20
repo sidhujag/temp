@@ -1,4 +1,4 @@
-﻿#ifndef SYSCOIN_SYSCOIN_CONFIG_H
+#ifndef SYSCOIN_SYSCOIN_CONFIG_H
 #define SYSCOIN_SYSCOIN_CONFIG_H
 
 /* Define if building universal (internal helper macro) */

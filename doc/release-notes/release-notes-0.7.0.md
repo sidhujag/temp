@@ -1,4 +1,4 @@
-﻿Syscoin version 0.7.0 is now available for download at:
+Syscoin version 0.7.0 is now available for download at:
   http://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.7.0/
 
 We recommend that everybody running prior versions of syscoind/Syscoin-Qt

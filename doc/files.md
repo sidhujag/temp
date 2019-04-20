@@ -1,4 +1,4 @@
-﻿Filename            | Description
+Filename            | Description
 --------------------|----------------------------------------------------------------------------------------------------------------------------
 banlist.dat         | stores the IPs/Subnets of banned nodes
 syscoin.conf        | contains configuration settings for syscoind or syscoin-qt

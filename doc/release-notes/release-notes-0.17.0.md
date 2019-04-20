@@ -1,4 +1,4 @@
-﻿Syscoin Core version 0.17.0 is now available from:
+Syscoin Core version 0.17.0 is now available from:
 
   <https://syscoincore.org/bin/syscoin-core-0.17.0/>
 

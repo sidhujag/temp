@@ -1,4 +1,4 @@
-﻿alignment:move.h
+alignment:move.h
 alignment:prevector.h
 bool:wallet/wallet.cpp
 float-divide-by-zero:policy/fees.cpp

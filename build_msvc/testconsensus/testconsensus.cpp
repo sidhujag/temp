@@ -1,4 +1,4 @@
-﻿#include <iostream>
+#include <iostream>
 
 // syscoin includes.
 #include <..\src\script\syscoinconsensus.h>

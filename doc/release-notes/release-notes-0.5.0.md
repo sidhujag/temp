@@ -1,4 +1,4 @@
-﻿Syscoin version 0.5.0 is now available for download at:
+Syscoin version 0.5.0 is now available for download at:
 http://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.5.0/
 
 The major change for this release is a completely new graphical interface that uses the Qt user interface toolkit.

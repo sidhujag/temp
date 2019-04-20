@@ -1,4 +1,4 @@
-﻿Syscoin Core
+Syscoin Core
 =============
 
 Intro

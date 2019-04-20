@@ -1,4 +1,4 @@
-﻿Dependencies
+Dependencies
 ============
 
 These are the dependencies currently used by Syscoin Core. You can find instructions for installing them in the `build-*.md` file for your platform.

@@ -1,4 +1,4 @@
-﻿Syscoin version 0.7.1 is now available from:
+Syscoin version 0.7.1 is now available from:
   http://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.7.1/
 
 This is a bug-fix minor release.

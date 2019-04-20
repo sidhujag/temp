@@ -1,4 +1,4 @@
-﻿.PHONY: FORCE
+.PHONY: FORCE
 all: FORCE
 	$(MAKE) -C .. syscoin_qt test_syscoin_qt
 clean: FORCE

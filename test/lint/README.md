@@ -1,4 +1,4 @@
-﻿This folder contains lint scripts.
+This folder contains lint scripts.
 
 check-doc.py
 ============

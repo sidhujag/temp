@@ -1,4 +1,4 @@
-﻿# `syscoin.conf` Configuration File
+# `syscoin.conf` Configuration File
 
 The configuration file is used by `syscoind`, `syscoin-qt` and `syscoin-cli`.
 

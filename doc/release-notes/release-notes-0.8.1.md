@@ -1,4 +1,4 @@
-﻿Syscoin-Qt/syscoind version 0.8.1 is now available from:
+Syscoin-Qt/syscoind version 0.8.1 is now available from:
   http://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.8.1/
 
 This is a maintenance release that adds a new network rule to avoid

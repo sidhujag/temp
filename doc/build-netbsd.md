@@ -1,4 +1,4 @@
-﻿NetBSD build guide
+NetBSD build guide
 ======================
 (updated for NetBSD 8.0)
 

@@ -1,4 +1,4 @@
-﻿# /etc/conf.d/syscoind: config file for /etc/init.d/syscoind
+# /etc/conf.d/syscoind: config file for /etc/init.d/syscoind
 
 # Config file location
 #SYSCOIND_CONFIGFILE="/etc/syscoin/syscoin.conf"

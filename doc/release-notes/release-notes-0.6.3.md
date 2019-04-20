@@ -1,4 +1,4 @@
-﻿Syscoin version 0.6.3 is now available for download at:
+Syscoin version 0.6.3 is now available for download at:
   http://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.6.3/
 
 This is a bug-fix release, with no new features.

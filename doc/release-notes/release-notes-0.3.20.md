@@ -1,4 +1,4 @@
-﻿Please checkout the git integration branch from:
+Please checkout the git integration branch from:
 
 https://github.com/syscoin/syscoin
 

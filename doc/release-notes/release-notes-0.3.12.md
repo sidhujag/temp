@@ -1,4 +1,4 @@
-﻿Version 0.3.12 is now available.
+Version 0.3.12 is now available.
 
 Features:
 * json-rpc errors return a more standard error object. (thanks to Gavin Andresen)

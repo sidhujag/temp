@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 #
 # Copyright (c) 2017 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying

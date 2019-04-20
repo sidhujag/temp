@@ -1,4 +1,4 @@
-﻿#ifndef SYSCOIN_CHAINPARAMSSEEDS_H
+#ifndef SYSCOIN_CHAINPARAMSSEEDS_H
 #define SYSCOIN_CHAINPARAMSSEEDS_H
 /**
  * List of fixed seed nodes for the syscoin network

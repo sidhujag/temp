@@ -1,4 +1,4 @@
-﻿Syscoin v0.3.24 is now available for download at
+Syscoin v0.3.24 is now available for download at
 https://sourceforge.net/projects/syscoin/files/Syscoin/syscoin-0.3.24/
 
 This is another bug fix release.  We had hoped to have wallet encryption ready for release, but more urgent fixes for existing clients were needed -- most notably block download problems were getting severe.  Wallet encryption is ready for testing at https://github.com/syscoin/syscoin/pull/352 for the git-savvy, and hopefully will follow shortly in the next release, v0.4.

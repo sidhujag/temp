@@ -1,4 +1,4 @@
-﻿<!DOCTYPE RCC><RCC version="1.0">
+<!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/translations">
         <file alias="af">locale/syscoin_af.qm</file>
         <file alias="af_ZA">locale/syscoin_af_ZA.qm</file>

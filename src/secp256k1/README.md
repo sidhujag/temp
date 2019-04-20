@@ -1,4 +1,4 @@
-﻿libsecp256k1
+libsecp256k1
 ============
 
 [![Build Status](https://travis-ci.org/syscoin-core/secp256k1.svg?branch=master)](https://travis-ci.org/syscoin-core/secp256k1)

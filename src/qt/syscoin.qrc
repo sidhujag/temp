@@ -1,4 +1,4 @@
-﻿<!DOCTYPE RCC><RCC version="1.0">
+<!DOCTYPE RCC><RCC version="1.0">
     <qresource prefix="/icons">
         <file alias="syscoin">res/icons/syscoin.png</file>
         <file alias="address-book">res/icons/address-book.png</file>

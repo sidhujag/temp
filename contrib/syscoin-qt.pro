@@ -1,4 +1,4 @@
-﻿FORMS += \
+FORMS += \
     ../src/qt/forms/aboutdialog.ui \
     ../src/qt/forms/addressbookpage.ui \
     ../src/qt/forms/askpassphrasedialog.ui \
