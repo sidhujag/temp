@@ -1,14 +1,14 @@
 *.tar.gz
 
 *.exe
-src/bitcoin
-src/bitcoind
-src/bitcoin-cli
-src/bitcoin-tx
-src/bitcoin-wallet
-src/test/test_bitcoin
-src/test/test_bitcoin_fuzzy
-src/qt/test/test_bitcoin-qt
+src/syscoin
+src/syscoind
+src/syscoin-cli
+src/syscoin-tx
+src/syscoin-wallet
+src/test/test_syscoin
+src/test/test_syscoin_fuzzy
+src/qt/test/test_syscoin-qt
 
 # autoreconf
 Makefile.in
@@ -31,8 +31,8 @@ config.log
 config.status
 configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+src/config/syscoin-config.h
+src/config/syscoin-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -45,11 +45,11 @@ src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
 
-src/qt/bitcoin-qt.config
-src/qt/bitcoin-qt.creator
-src/qt/bitcoin-qt.creator.user
-src/qt/bitcoin-qt.files
-src/qt/bitcoin-qt.includes
+src/qt/syscoin-qt.config
+src/qt/syscoin-qt.creator
+src/qt/syscoin-qt.creator.user
+src/qt/syscoin-qt.files
+src/qt/syscoin-qt.includes
 
 .deps
 .dirstamp
@@ -82,13 +82,13 @@ src/qt/bitcoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-bitcoin-qt
-Bitcoin-Qt.app
+syscoin-qt
+Syscoin-Qt.app
 background.tiff*
 
 # Unit-tests
 Makefile.test
-bitcoin-qt_test
+syscoin-qt_test
 
 # Resources cpp
 qrc_*.cpp
@@ -101,7 +101,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_bitcoin.coverage/
+test_syscoin.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -116,7 +116,7 @@ test/cache/*
 
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libsyscoinconsensus.pc
 contrib/devtools/split-debug.sh
 
 # Output from running db4 installation

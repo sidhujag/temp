@@ -3,7 +3,7 @@ Syscoin Core integration/staging tree
 
 [![Build Status](https://travis-ci.org/syscoin/syscoin.svg?branch=master)](https://travis-ci.org/syscoin/syscoin)
 
-https://syscoincore.org
+https://syscoin.org
 
 What is Syscoin?
 ----------------
@@ -15,8 +15,8 @@ out collectively by the network. Syscoin Core is the name of open source
 software which enables the use of this currency.
 
 For more information, as well as an immediately useable, binary version of
-the Syscoin Core software, see https://syscoincore.org/en/download/, or read the
-[original whitepaper](https://syscoincore.org/syscoin.pdf).
+the Syscoin Core software, see https://syscoin.org/en/download/, or read the
+[original whitepaper](https://syscoin.org/syscoin.pdf).
 
 License
 -------

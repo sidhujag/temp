@@ -86,7 +86,7 @@ Ensure gitian-builder is up-to-date:
 
     pushd ./gitian-builder
     mkdir -p inputs
-    wget -P inputs https://syscoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
+    wget -P inputs https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
     echo 'a8c4e9cafba922f89de0df1f2152e7be286aba73f78505169bc351a7938dd911 inputs/osslsigncode-Backports-to-1.7.1.patch' | sha256sum -c
     wget -P inputs https://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
     echo 'f9a8cdb38b9c309326764ebc937cba1523a3a751a7ab05df3ecc99d18ae466c9 inputs/osslsigncode-1.7.1.tar.gz' | sha256sum -c
@@ -293,9 +293,9 @@ syscoin.org (see below for syscoin.org update instructions).
 
 - Update other repositories and websites for new version
 
-  - syscoincore.org blog post
+  - syscoin.org blog post
 
-  - syscoincore.org RPC documentation update
+  - syscoin.org RPC documentation update
 
   - Update packaging repo
 
@@ -329,7 +329,7 @@ syscoin.org (see below for syscoin.org update instructions).
 
   - syscoin-dev and syscoin-core-dev mailing list
 
-  - Syscoin Core announcements list https://syscoincore.org/en/list/announcements/join/
+  - Syscoin Core announcements list https://syscoin.org/en/list/announcements/join/
 
   - Update title of #syscoin on Freenode IRC
 

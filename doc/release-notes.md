@@ -1,6 +1,6 @@
 Syscoin Core version 0.18.0 is now available from:
 
-  <https://syscoincore.org/bin/syscoin-core-0.18.0/>
+  <https://syscoin.org/bin/syscoin-core-0.18.0/>
 
 This is a new major version release, including new features, various bug
 fixes and performance improvements, as well as updated translations.
@@ -11,7 +11,7 @@ Please report bugs using the issue tracker at GitHub:
 
 To receive security and update notifications, please subscribe to:
 
-  <https://syscoincore.org/en/list/announcements/join/>
+  <https://syscoin.org/en/list/announcements/join/>
 
 How to Upgrade
 ==============
@@ -119,7 +119,7 @@ Configuration option changes
   disconnect/ban behavior will not cause a node that is whitelisting
   another to be dropped by peers.  Users can still explicitly enable
   this behavior with the command line option (and may want to consider
-  [contacting](https://syscoincore.org/en/contact/) the Syscoin Core
+  [contacting](https://syscoin.org/en/contact/) the Syscoin Core
   project to let us know about their use-case, as this feature could be
   deprecated in the future).
 
