@@ -94,7 +94,8 @@ BASE_SCRIPTS = [
     'rpc_txoutproof.py',
     'wallet_listreceivedby.py',
     'wallet_abandonconflict.py',
-    'feature_csv_activation.py',
+    # FIXME: Enable once we activate BIP9.
+    #'feature_csv_activation.py',
     'rpc_rawtransaction.py',
     'wallet_address_types.py',
     'feature_bip68_sequence.py',
@@ -148,7 +149,8 @@ BASE_SCRIPTS = [
     'feature_rbf.py',
     'mempool_packages.py',
     'rpc_createmultisig.py',
-    'feature_versionbits_warning.py',
+    # FIXME: Reenable and possibly fix once the BIP9 mining is activated.
+    #'feature_versionbits_warning.py',
     'rpc_preciousblock.py',
     'wallet_importprunedfunds.py',
     'p2p_leak_tx.py',
@@ -193,6 +195,12 @@ BASE_SCRIPTS = [
     'feature_shutdown.py',
     # Don't append tests at the end to avoid merge conflicts
     # Put them in a random line within the section that fits their approximate run-time
+
+    # auxpow tests
+    'auxpow_mining.py',
+    'auxpow_mining.py --segwit',
+    'auxpow_invalidpow.py',
+    'auxpow_zerohash.py',
 ]
 
 EXTENDED_SCRIPTS = [
@@ -200,6 +208,12 @@ EXTENDED_SCRIPTS = [
     # Longest test should go first, to favor running tests in parallel
     'feature_pruning.py',
     'feature_dbcrash.py',
+]
+
+# Tests that are currently being skipped (e. g., because of BIP9).
+SKIPPED = [
+    'feature_csv_activation.py',
+    'feature_versionbits_warning.py',
 ]
 
 # Place EXTENDED_SCRIPTS first since it has the 3 longest running tests
@@ -553,7 +567,7 @@ class TestResult():
 def check_script_prefixes():
     """Check that test scripts start with one of the allowed name prefixes."""
 
-    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool)_")
+    good_prefixes_re = re.compile("(example|feature|interface|mempool|mining|p2p|rpc|wallet|tool|auxpow)_")
     bad_script_names = [script for script in ALL_SCRIPTS if good_prefixes_re.match(script) is None]
 
     if bad_script_names:
@@ -569,7 +583,7 @@ def check_script_list(*, src_dir, fail_on_warn):
     not being run by pull-tester.py."""
     script_dir = src_dir + '/test/functional/'
     python_files = set([test_file for test_file in os.listdir(script_dir) if test_file.endswith(".py")])
-    missed_tests = list(python_files - set(map(lambda x: x.split()[0], ALL_SCRIPTS + NON_SCRIPTS)))
+    missed_tests = list(python_files - set(map(lambda x: x.split()[0], ALL_SCRIPTS + NON_SCRIPTS + SKIPPED)))
     if len(missed_tests) != 0:
         print("%sWARNING!%s The following scripts are not being run: %s. Check the test lists in test_runner.py." % (BOLD[1], BOLD[0], str(missed_tests)))
         if fail_on_warn:

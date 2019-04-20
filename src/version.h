@@ -11,6 +11,9 @@
 
 static const int PROTOCOL_VERSION = 70015;
 
+//! Version when we switched to a size-based "headers" limit.
+static const int SIZE_HEADERS_LIMIT_VERSION = 70015;
+
 //! initial proto version, to be increased after version/verack negotiation
 static const int INIT_PROTO_VERSION = 209;
 

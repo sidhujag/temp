@@ -15,6 +15,7 @@
 #include <net.h>
 #include <policy/fees.h>
 #include <pow.h>
+#include <rpc/auxpow_miner.h>
 #include <rpc/blockchain.h>
 #include <rpc/mining.h>
 #include <rpc/server.h>
@@ -28,8 +29,9 @@
 #include <versionbitsinfo.h>
 #include <warnings.h>
 
-#include <memory>
 #include <stdint.h>
+#include <string>
+#include <utility>
 
 /**
  * Return average network hashes per second based on the last 'lookup' blocks,
@@ -121,14 +123,15 @@ UniValue generateBlocks(std::shared_ptr<CReserveScript> coinbaseScript, int nGen
             LOCK(cs_main);
             IncrementExtraNonce(pblock, chainActive.Tip(), nExtraNonce);
         }
-        while (nMaxTries > 0 && pblock->nNonce < nInnerLoopCount && !CheckProofOfWork(pblock->GetHash(), pblock->nBits, Params().GetConsensus())) {
-            ++pblock->nNonce;
+        auto& miningHeader = CAuxPow::initAuxPow(*pblock);
+        while (nMaxTries > 0 && miningHeader.nNonce < nInnerLoopCount && !CheckProofOfWork(miningHeader.GetHash(), pblock->nBits, Params().GetConsensus())) {
+            ++miningHeader.nNonce;
             --nMaxTries;
         }
         if (nMaxTries == 0) {
             break;
         }
-        if (pblock->nNonce == nInnerLoopCount) {
+        if (miningHeader.nNonce == nInnerLoopCount) {
             continue;
         }
         std::shared_ptr<const CBlock> shared_pblock = std::make_shared<const CBlock>(*pblock);
@@ -497,9 +500,8 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
         // TODO: Maybe recheck connections/IBD and (if something wrong) send an expires-immediately template to stop miners?
     }
 
-    const struct VBDeploymentInfo& segwit_info = VersionBitsDeploymentInfo[Consensus::DEPLOYMENT_SEGWIT];
     // GBT must be called with 'segwit' set in the rules
-    if (setClientRules.count(segwit_info.name) != 1) {
+    if (setClientRules.count("segwit") != 1) {
         throw JSONRPCError(RPC_INVALID_PARAMETER, "getblocktemplate must be called with the segwit rule set (call with {\"rules\": [\"segwit\"]})");
     }
 
@@ -536,7 +538,7 @@ static UniValue getblocktemplate(const JSONRPCRequest& request)
     pblock->nNonce = 0;
 
     // NOTE: If at some point we support pre-segwit miners post-segwit-activation, this needs to take segwit support into consideration
-    const bool fPreSegWit = (ThresholdState::ACTIVE != VersionBitsState(pindexPrev, consensusParams, Consensus::DEPLOYMENT_SEGWIT, versionbitscache));
+    const bool fPreSegWit = !IsWitnessEnabled(pindexPrev, consensusParams);
 
     UniValue aCaps(UniValue::VARR); aCaps.push_back("proposal");
 
@@ -972,6 +974,76 @@ static UniValue estimaterawfee(const JSONRPCRequest& request)
     return result;
 }
 
+/* ************************************************************************** */
+/* Merge mining.  */
+
+std::unique_ptr<AuxpowMiner> g_auxpow_miner;
+
+UniValue createauxblock(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 1)
+        throw std::runtime_error(
+            RPCHelpMan{"createauxblock",
+                "\nCreates a new block and returns information required to"
+                " merge-mine it.\n",
+                {
+                    {"address", RPCArg::Type::STR, RPCArg::Optional::NO, "Payout address for the coinbase transaction"},
+                },
+                RPCResult{
+            "{\n"
+            "  \"hash\"               (string) hash of the created block\n"
+            "  \"chainid\"            (numeric) chain ID for this block\n"
+            "  \"previousblockhash\"  (string) hash of the previous block\n"
+            "  \"coinbasevalue\"      (numeric) value of the block's coinbase\n"
+            "  \"bits\"               (string) compressed target of the block\n"
+            "  \"height\"             (numeric) height of the block\n"
+            "  \"_target\"            (string) target in reversed byte order, deprecated\n"
+            "}\n"
+                },
+                RPCExamples{
+                  HelpExampleCli("createauxblock", "\"address\"")
+                  + HelpExampleRpc("createauxblock", "\"address\"")
+                },
+            }.ToString());
+
+    // Check coinbase payout address
+    const CTxDestination coinbaseScript
+      = DecodeDestination(request.params[0].get_str());
+    if (!IsValidDestination(coinbaseScript)) {
+        throw JSONRPCError(RPC_INVALID_ADDRESS_OR_KEY,
+                           "Error: Invalid coinbase payout address");
+    }
+    const CScript scriptPubKey = GetScriptForDestination(coinbaseScript);
+
+    return g_auxpow_miner->createAuxBlock(scriptPubKey);
+}
+
+UniValue submitauxblock(const JSONRPCRequest& request)
+{
+    if (request.fHelp || request.params.size() != 2)
+        throw std::runtime_error(
+            RPCHelpMan{"submitauxblock",
+                "\nSubmits a solved auxpow for a block that was previously"
+                " created by 'createauxblock'.\n",
+                {
+                    {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Hash of the block to submit"},
+                    {"auxpow", RPCArg::Type::STR_HEX, RPCArg::Optional::NO, "Serialised auxpow found"},
+                },
+                RPCResult{
+            "xxxxx        (boolean) whether the submitted block was correct\n"
+                },
+                RPCExamples{
+                    HelpExampleCli("submitauxblock", "\"hash\" \"serialised auxpow\"")
+                    + HelpExampleRpc("submitauxblock", "\"hash\" \"serialised auxpow\"")
+                },
+            }.ToString());
+
+    return g_auxpow_miner->submitAuxBlock(request.params[0].get_str(),
+                                          request.params[1].get_str());
+}
+
+/* ************************************************************************** */
+
 // clang-format off
 static const CRPCCommand commands[] =
 { //  category              name                      actor (function)         argNames
@@ -983,6 +1055,8 @@ static const CRPCCommand commands[] =
     { "mining",             "submitblock",            &submitblock,            {"hexdata","dummy"} },
     { "mining",             "submitheader",           &submitheader,           {"hexdata"} },
 
+    { "mining",             "createauxblock",         &createauxblock,         {"address"} },
+    { "mining",             "submitauxblock",         &submitauxblock,         {"hash", "auxpow"} },
 
     { "generating",         "generatetoaddress",      &generatetoaddress,      {"nblocks","address","maxtries"} },
 

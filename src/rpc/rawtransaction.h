@@ -6,8 +6,10 @@
 #define BITCOIN_RPC_RAWTRANSACTION_H
 
 class CBasicKeyStore;
+class CTransaction;
 struct CMutableTransaction;
 class UniValue;
+class uint256;
 
 namespace interfaces {
 class Chain;
@@ -18,5 +20,7 @@ UniValue SignTransaction(interfaces::Chain& chain, CMutableTransaction& mtx, con
 
 /** Create a transaction from univalue parameters */
 CMutableTransaction ConstructTransaction(const UniValue& inputs_in, const UniValue& outputs_in, const UniValue& locktime, const UniValue& rbf);
+
+void TxToJSON(const CTransaction& tx, const uint256 hashBlock, UniValue& entry);
 
 #endif // BITCOIN_RPC_RAWTRANSACTION_H

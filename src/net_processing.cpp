@@ -1372,6 +1372,17 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
         return true;
     }
 
+    size_t nSize = 0;
+    for (const auto& header : headers) {
+        nSize += GetSerializeSize(header, PROTOCOL_VERSION);
+        if (pfrom->nVersion >= SIZE_HEADERS_LIMIT_VERSION
+              && nSize > MAX_HEADERS_SIZE) {
+            LOCK(cs_main);
+            Misbehaving(pfrom->GetId(), 20);
+            return error("headers message size = %u", nSize);
+        }
+    }
+
     bool received_new_header = false;
     const CBlockIndex *pindexLast = nullptr;
     {
@@ -1489,7 +1500,14 @@ bool static ProcessHeadersMessage(CNode *pfrom, CConnman *connman, const std::ve
             nodestate->m_last_block_announcement = GetTime();
         }
 
-        if (nCount == MAX_HEADERS_RESULTS) {
+        bool maxSize = (nCount == MAX_HEADERS_RESULTS);
+        if (pfrom->nVersion >= SIZE_HEADERS_LIMIT_VERSION
+              && nSize >= THRESHOLD_HEADERS_SIZE)
+            maxSize = true;
+        // FIXME: This change (with hasNewHeaders) is rolled back in Bitcoin,
+        // but I think it should stay here for merge-mined coins.  Try to get
+        // it fixed again upstream and then update the fix.
+        if (maxSize && received_new_header) {
             // Headers message had its maximum size; the peer may have more headers.
             // TODO: optimize: if pindexLast is an ancestor of chainActive.Tip or pindexBestHeader, continue
             // from there instead.
@@ -2238,28 +2256,50 @@ bool static ProcessMessage(CNode* pfrom, const std::string& strCommand, CDataStr
 
         // we must use CBlocks, as CBlockHeaders won't include the 0x00 nTx count at the end
         std::vector<CBlock> vHeaders;
-        int nLimit = MAX_HEADERS_RESULTS;
+        unsigned nCount = 0;
+        unsigned nSize = 0;
         LogPrint(BCLog::NET, "getheaders %d to %s from peer=%d\n", (pindex ? pindex->nHeight : -1), hashStop.IsNull() ? "end" : hashStop.ToString(), pfrom->GetId());
         for (; pindex; pindex = chainActive.Next(pindex))
         {
-            vHeaders.push_back(pindex->GetBlockHeader());
-            if (--nLimit <= 0 || pindex->GetBlockHash() == hashStop)
+            const CBlockHeader header = pindex->GetBlockHeader(chainparams.GetConsensus());
+            ++nCount;
+            nSize += GetSerializeSize(header, PROTOCOL_VERSION);
+            vHeaders.push_back(header);
+            if (nCount >= MAX_HEADERS_RESULTS
+                  || pindex->GetBlockHash() == hashStop)
+                break;
+            if (pfrom->nVersion >= SIZE_HEADERS_LIMIT_VERSION
+                  && nSize >= THRESHOLD_HEADERS_SIZE)
                 break;
         }
-        // pindex can be nullptr either if we sent chainActive.Tip() OR
-        // if our peer has chainActive.Tip() (and thus we are sending an empty
-        // headers message). In both cases it's safe to update
-        // pindexBestHeaderSent to be our tip.
-        //
-        // It is important that we simply reset the BestHeaderSent value here,
-        // and not max(BestHeaderSent, newHeaderSent). We might have announced
-        // the currently-being-connected tip using a compact block, which
-        // resulted in the peer sending a headers request, which we respond to
-        // without the new block. By resetting the BestHeaderSent, we ensure we
-        // will re-announce the new block via headers (or compact blocks again)
-        // in the SendMessages logic.
-        nodestate->pindexBestHeaderSent = pindex ? pindex : chainActive.Tip();
-        connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::HEADERS, vHeaders));
+
+        /* Check maximum headers size before pushing the message
+           if the peer enforces it.  This should not fail since we
+           break above in the loop at the threshold and the threshold
+           should be small enough in comparison to the hard max size.
+           Do it nevertheless to be sure.  */
+        if (pfrom->nVersion >= SIZE_HEADERS_LIMIT_VERSION
+              && nSize > MAX_HEADERS_SIZE)
+            LogPrintf("ERROR: not pushing 'headers', too large\n");
+        else
+        {
+            LogPrint(BCLog::NET, "pushing %u headers, %u bytes\n", nCount, nSize);
+            // pindex can be nullptr either if we sent chainActive.Tip() OR
+            // if our peer has chainActive.Tip() (and thus we are sending an empty
+            // headers message). In both cases it's safe to update
+            // pindexBestHeaderSent to be our tip.
+            //
+            // It is important that we simply reset the BestHeaderSent value here,
+            // and not max(BestHeaderSent, newHeaderSent). We might have announced
+            // the currently-being-connected tip using a compact block, which
+            // resulted in the peer sending a headers request, which we respond to
+            // without the new block. By resetting the BestHeaderSent, we ensure we
+            // will re-announce the new block via headers (or compact blocks again)
+            // in the SendMessages logic.
+            nodestate->pindexBestHeaderSent = pindex ? pindex : chainActive.Tip();
+            connman->PushMessage(pfrom, msgMaker.Make(NetMsgType::HEADERS, vHeaders));
+        }
+
         return true;
     }
 
@@ -3450,14 +3490,14 @@ bool PeerLogicValidation::SendMessages(CNode* pto)
                     pBestIndex = pindex;
                     if (fFoundStartingHeader) {
                         // add this to the headers message
-                        vHeaders.push_back(pindex->GetBlockHeader());
+                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams));
                     } else if (PeerHasHeader(&state, pindex)) {
                         continue; // keep looking for the first new block
                     } else if (pindex->pprev == nullptr || PeerHasHeader(&state, pindex->pprev)) {
                         // Peer doesn't have this header but they do have the prior one.
                         // Start sending headers.
                         fFoundStartingHeader = true;
-                        vHeaders.push_back(pindex->GetBlockHeader());
+                        vHeaders.push_back(pindex->GetBlockHeader(consensusParams));
                     } else {
                         // Peer doesn't have this header or the prior one -- nothing will
                         // connect, so bail out.

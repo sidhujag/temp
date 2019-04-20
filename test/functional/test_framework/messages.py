@@ -31,7 +31,7 @@ from test_framework.siphash import siphash256
 from test_framework.util import hex_str_to_bytes, bytes_to_hex_str, assert_equal
 
 MIN_VERSION_SUPPORTED = 60001
-MY_VERSION = 70014  # past bip-31 for ping/pong
+MY_VERSION = 110014  # past bip-31 for ping/pong
 MY_SUBVERSION = b"/python-mininode-tester:0.0.3/"
 MY_RELAY = 1 # from version 70001 onwards, fRelay should be appended to version messages (BIP37)
 
@@ -52,6 +52,11 @@ MSG_TX = 1
 MSG_BLOCK = 2
 MSG_WITNESS_FLAG = 1 << 30
 MSG_TYPE_MASK = 0xffffffff >> 2
+
+# Constants for the auxpow block version.
+VERSION_AUXPOW = (1 << 8)
+VERSION_CHAIN_START = (1 << 16)
+CHAIN_ID = 1
 
 # Serialization/deserialization tools
 def sha256(s):
@@ -521,8 +526,43 @@ class CTransaction:
             % (self.nVersion, repr(self.vin), repr(self.vout), repr(self.wit), self.nLockTime)
 
 
+class CAuxPow(CTransaction):
+    __slots__ = ("hashBlock", "vMerkleBranch", "nIndex",
+                 "vChainMerkleBranch", "nChainIndex", "parentBlock")
+
+    def __init__(self):
+        super(CAuxPow, self).__init__()
+        self.hashBlock = 0
+        self.vMerkleBranch = []
+        self.nIndex = 0
+        self.vChainMerkleBranch = []
+        self.nChainIndex = 0
+        self.parentBlock = CBlockHeader()
+
+    def deserialize(self, f):
+        super(CAuxPow, self).deserialize(f)
+        self.hashBlock = deser_uint256(f)
+        self.vMerkleBranch = deser_uint256_vector(f)
+        self.nIndex = struct.unpack("<I", f.read(4))[0]
+        self.vChainMerkleBranch = deser_uint256_vector(f)
+        self.nChainIndex = struct.unpack("<I", f.read(4))[0]
+        self.parentBlock.deserialize(f)
+
+    def serialize(self):
+        r = b""
+        r += super(CAuxPow, self).serialize()
+        r += ser_uint256(self.hashBlock)
+        r += ser_uint256_vector(self.vMerkleBranch)
+        r += struct.pack("<I", self.nIndex)
+        r += ser_uint256_vector(self.vChainMerkleBranch)
+        r += struct.pack("<I", self.nChainIndex)
+        r += self.parentBlock.serialize()
+        return r
+
+
 class CBlockHeader:
     __slots__ = ("hash", "hashMerkleRoot", "hashPrevBlock", "nBits", "nNonce",
+                 "auxpow",
                  "nTime", "nVersion", "sha256")
 
     def __init__(self, header=None):
@@ -535,19 +575,31 @@ class CBlockHeader:
             self.nTime = header.nTime
             self.nBits = header.nBits
             self.nNonce = header.nNonce
+            self.auxpow = header.auxpow
             self.sha256 = header.sha256
             self.hash = header.hash
             self.calc_sha256()
 
     def set_null(self):
-        self.nVersion = 1
+        # Set auxpow chain ID.  Blocks without a chain ID are not accepted
+        # by the regtest network consensus rules (since they are "legacy").
+        self.set_base_version(1)
+
         self.hashPrevBlock = 0
         self.hashMerkleRoot = 0
         self.nTime = 0
         self.nBits = 0
         self.nNonce = 0
+        self.auxpow = None
         self.sha256 = None
         self.hash = None
+
+    def set_base_version(self, n):
+        assert n < VERSION_AUXPOW
+        self.nVersion = n + CHAIN_ID * VERSION_CHAIN_START
+
+    def is_auxpow(self):
+        return (self.nVersion & VERSION_AUXPOW) > 0
 
     def deserialize(self, f):
         self.nVersion = struct.unpack("<i", f.read(4))[0]
@@ -556,6 +608,9 @@ class CBlockHeader:
         self.nTime = struct.unpack("<I", f.read(4))[0]
         self.nBits = struct.unpack("<I", f.read(4))[0]
         self.nNonce = struct.unpack("<I", f.read(4))[0]
+        if self.is_auxpow():
+            self.auxpow = CAuxPow()
+            self.auxpow.deserialize(f)
         self.sha256 = None
         self.hash = None
 
@@ -567,6 +622,8 @@ class CBlockHeader:
         r += struct.pack("<I", self.nTime)
         r += struct.pack("<I", self.nBits)
         r += struct.pack("<I", self.nNonce)
+        if self.is_auxpow():
+            r += self.auxpow.serialize()
         return r
 
     def calc_sha256(self):
@@ -646,6 +703,11 @@ class CBlock(CBlockHeader):
     def is_valid(self):
         self.calc_sha256()
         target = uint256_from_compact(self.nBits)
+
+        # FIXME: Validation is not actually used anywhere.  If it is in
+        # the future, need to implement basic auxpow checking.
+        assert not self.is_auxpow()
+
         if self.sha256 > target:
             return False
         for tx in self.vtx:

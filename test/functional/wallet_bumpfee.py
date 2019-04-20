@@ -49,7 +49,7 @@ class BumpFeeTest(BitcoinTestFramework):
 
         # fund rbf node with 10 coins of 0.001 btc (100,000 satoshis)
         self.log.info("Mining blocks...")
-        peer_node.generate(110)
+        peer_node.generate(500) # Activates segwit at block 432.
         self.sync_all()
         for i in range(25):
             peer_node.sendtoaddress(rbf_node_address, 0.001)
@@ -292,7 +292,8 @@ def submit_block_with_tx(node, tx):
     tip = node.getbestblockhash()
     height = node.getblockcount() + 1
     block_time = node.getblockheader(tip)["mediantime"] + 1
-    block = create_block(int(tip, 16), create_coinbase(height), block_time)
+    block = create_block(int(tip, 16), create_coinbase(height), block_time,
+                         version=4)
     block.vtx.append(ctx)
     block.rehash()
     block.hashMerkleRoot = block.calc_merkle_root()

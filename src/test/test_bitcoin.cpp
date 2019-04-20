@@ -41,9 +41,6 @@ BasicTestingSetup::BasicTestingSetup(const std::string& chainName)
     InitSignatureCache();
     InitScriptExecutionCache();
     fCheckBlockIndex = true;
-    // CreateAndProcessBlock() does not support building SegWit blocks, so don't activate in these tests.
-    // TODO: fix the code to support SegWit blocks.
-    gArgs.ForceSetArg("-vbparams", strprintf("segwit:0:%d", (int64_t)Consensus::BIP9Deployment::NO_TIMEOUT));
     SelectParams(chainName);
     noui_connect();
 }
@@ -114,6 +111,10 @@ TestingSetup::~TestingSetup()
 
 TestChain100Setup::TestChain100Setup() : TestingSetup(CBaseChainParams::REGTEST)
 {
+    // CreateAndProcessBlock() does not support building SegWit blocks, so don't activate in these tests.
+    // TODO: fix the code to support SegWit blocks.
+    TurnOffSegwitForUnitTests();
+
     // Generate a 100-block chain:
     coinbaseKey.MakeNewKey(true);
     CScript scriptPubKey = CScript() <<  ToByteVector(coinbaseKey.GetPubKey()) << OP_CHECKSIG;

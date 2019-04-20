@@ -20,6 +20,11 @@ class PSBTTest(BitcoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 3
+        # Upstream Bitcoin has p2sh-segwit as default address type and this
+        # test depends on that.  Since we changed it (for now, pending
+        # segwit activation in Namecoin), explicitly specify the address
+        # type for this test.
+        self.extra_args = [["-addresstype=p2sh-segwit"]] * self.num_nodes
 
     def skip_test_if_missing_module(self):
         self.skip_if_no_wallet()
@@ -64,6 +69,10 @@ class PSBTTest(BitcoinTestFramework):
         connect_nodes_bi(self.nodes, 0, 2)
 
     def run_test(self):
+        # Activate segwit at height 432.
+        self.nodes[0].generate (500)
+        self.sync_all()
+
         # Create and fund a raw tx for sending 10 BTC
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
 

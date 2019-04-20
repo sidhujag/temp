@@ -19,6 +19,7 @@
 #include <policy/fees.h>
 #include <policy/policy.h>
 #include <policy/rbf.h>
+#include <rpc/auxpow_miner.h>
 #include <rpc/mining.h>
 #include <rpc/rawtransaction.h>
 #include <rpc/server.h>
@@ -4132,6 +4133,81 @@ UniValue walletcreatefundedpsbt(const JSONRPCRequest& request)
     return result;
 }
 
+UniValue getauxblock(const JSONRPCRequest& request)
+{
+    std::shared_ptr<CWallet> const wallet = GetWalletForJSONRPCRequest(request);
+    CWallet* const pwallet = wallet.get();
+
+    if (!EnsureWalletIsAvailable(pwallet, request.fHelp)) {
+        return NullUniValue;
+    }
+
+    if (request.fHelp
+          || (request.params.size() != 0 && request.params.size() != 2))
+        throw std::runtime_error(
+            RPCHelpMan{"getauxblock",
+                "\nCreates or submits a merge-mined block.\n"
+                "\nWithout arguments, creates a new block and returns information\n"
+                "required to merge-mine it.  With arguments, submits a solved\n"
+                "auxpow for a previously returned block.\n",
+                {
+                    {"hash", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED_NAMED_ARG, "Hash of the block to submit"},
+                    {"auxpow", RPCArg::Type::STR_HEX, RPCArg::Optional::OMITTED_NAMED_ARG, "Serialised auxpow found"},
+                },
+                RPCResults{
+                  {"without arguments",
+                      "{\n"
+                      "  \"hash\"               (string) hash of the created block\n"
+                      "  \"chainid\"            (numeric) chain ID for this block\n"
+                      "  \"previousblockhash\"  (string) hash of the previous block\n"
+                      "  \"coinbasevalue\"      (numeric) value of the block's coinbase\n"
+                      "  \"bits\"               (string) compressed target of the block\n"
+                      "  \"height\"             (numeric) height of the block\n"
+                      "  \"_target\"            (string) target in reversed byte order, deprecated\n"
+                      "}\n"
+                  },
+                  {"with arguments",
+                      "xxxxx        (boolean) whether the submitted block was correct\n"
+                  },
+                },
+                RPCExamples{
+                    HelpExampleCli("getauxblock", "")
+                    + HelpExampleCli("getauxblock", "\"hash\" \"serialised auxpow\"")
+                    + HelpExampleRpc("getauxblock", "")
+                },
+            }.ToString());
+
+    if (pwallet->IsWalletFlagSet(WALLET_FLAG_DISABLE_PRIVATE_KEYS)) {
+        throw JSONRPCError(RPC_WALLET_ERROR, "Error: Private keys are disabled for this wallet");
+    }
+
+    std::shared_ptr<CReserveScript> coinbaseScript;
+    pwallet->GetScriptForMining(coinbaseScript);
+
+    /* If the keypool is exhausted, no script is returned at all.
+       Catch this.  */
+    if (!coinbaseScript)
+        throw JSONRPCError(RPC_WALLET_KEYPOOL_RAN_OUT, "Error: Keypool ran out, please call keypoolrefill first");
+
+    /* Throw an error if no script was provided.  */
+    if (!coinbaseScript->reserveScript.size())
+        throw JSONRPCError(RPC_INTERNAL_ERROR, "No coinbase script available (mining requires a wallet)");
+
+    /* Create a new block */
+    if (request.params.size() == 0)
+        return g_auxpow_miner->createAuxBlock(coinbaseScript->reserveScript);
+
+    /* Submit a block instead.  */
+    assert(request.params.size() == 2);
+    bool fAccepted
+        = g_auxpow_miner->submitAuxBlock(request.params[0].get_str(),
+                                         request.params[1].get_str());
+    if (fAccepted)
+        coinbaseScript->KeepScript();
+
+    return fAccepted;
+}
+
 UniValue abortrescan(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue dumpprivkey(const JSONRPCRequest& request); // in rpcdump.cpp
 UniValue importprivkey(const JSONRPCRequest& request);
@@ -4203,6 +4279,9 @@ static const CRPCCommand commands[] =
     { "wallet",             "walletpassphrase",                 &walletpassphrase,              {"passphrase","timeout"} },
     { "wallet",             "walletpassphrasechange",           &walletpassphrasechange,        {"oldpassphrase","newpassphrase"} },
     { "wallet",             "walletprocesspsbt",                &walletprocesspsbt,             {"psbt","sign","sighashtype","bip32derivs"} },
+
+    /** Auxpow wallet functions */
+    { "mining",             "getauxblock",                      &getauxblock,                   {"hash","auxpow"} },
 };
 // clang-format on
 

@@ -31,6 +31,8 @@
 #include <policy/feerate.h>
 #include <policy/fees.h>
 #include <policy/policy.h>
+#include <rpc/auxpow_miner.h>
+#include <rpc/mining.h>
 #include <rpc/server.h>
 #include <rpc/register.h>
 #include <rpc/blockchain.h>
@@ -220,6 +222,10 @@ void Shutdown(InitInterfaces& interfaces)
     if (peerLogic) UnregisterValidationInterface(peerLogic.get());
     if (g_connman) g_connman->Stop();
     if (g_txindex) g_txindex->Stop();
+
+    if (g_auxpow_miner != nullptr) {
+        g_auxpow_miner.reset();
+    }
 
     StopTorControl();
 
@@ -884,7 +890,7 @@ namespace { // Variables internal to initialization process only
 int nMaxConnections;
 int nUserMaxConnections;
 int nFD;
-ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK | NODE_NETWORK_LIMITED);
+ServiceFlags nLocalServices = ServiceFlags(NODE_NETWORK | NODE_NETWORK_LIMITED | NODE_WITNESS);
 int64_t peer_connect_timeout;
 
 } // namespace
@@ -1302,6 +1308,8 @@ bool AppInitMain(InitInterfaces& interfaces)
     RegisterZMQRPCCommands(tableRPC);
 #endif
 
+    g_auxpow_miner.reset(new AuxpowMiner());
+
     /* Start the RPC server already.  It will be started in "warmup" mode
      * and not really process calls already (but it will signify connections
      * that the server is there and will be ready later).  Warmup mode will
@@ -1663,15 +1671,6 @@ bool AppInitMain(InitInterfaces& interfaces)
             uiInterface.InitMessage(_("Pruning blockstore..."));
             PruneAndFlush();
         }
-    }
-
-    if (chainparams.GetConsensus().vDeployments[Consensus::DEPLOYMENT_SEGWIT].nTimeout != 0) {
-        // Only advertise witness capabilities if they have a reasonable start time.
-        // This allows us to have the code merged without a defined softfork, by setting its
-        // end time to 0.
-        // Note that setting NODE_WITNESS is never required: the only downside from not
-        // doing so is that after activation, no upgraded nodes will fetch from you.
-        nLocalServices = ServiceFlags(nLocalServices | NODE_WITNESS);
     }
 
     // ********************************************************* Step 11: import blocks
