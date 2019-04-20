@@ -1,17 +1,17 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <PropertyGroup>
       <BuildDependsOn>
-          CopyBitcoinConfig;
+          CopySyscoinConfig;
           CopySecp256k1Config;
           $(BuildDependsOn);
       </BuildDependsOn>
   </PropertyGroup>
-  <Target Name="CopyBitcoinConfig"
-          Inputs="$(MSBuildThisFileDirectory)bitcoin_config.h"
-          Outputs="$(MSBuildThisFileDirectory)..\src\config\bitcoin-config.h">
-      <Copy SourceFiles="$(MSBuildThisFileDirectory)bitcoin_config.h" DestinationFiles="$(MSBuildThisFileDirectory)..\src\config\bitcoin-config.h" />
+  <Target Name="CopySyscoinConfig"
+          Inputs="$(MSBuildThisFileDirectory)syscoin_config.h"
+          Outputs="$(MSBuildThisFileDirectory)..\src\config\syscoin-config.h">
+      <Copy SourceFiles="$(MSBuildThisFileDirectory)syscoin_config.h" DestinationFiles="$(MSBuildThisFileDirectory)..\src\config\syscoin-config.h" />
   </Target>
   <Target Name="CopySecp256k1Config"
           Inputs="$(MSBuildThisFileDirectory)libsecp256k1_config.h"

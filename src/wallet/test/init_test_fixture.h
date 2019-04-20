@@ -1,12 +1,12 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+﻿// Copyright (c) 2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
-#define BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#ifndef SYSCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#define SYSCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
 
 #include <interfaces/chain.h>
-#include <test/test_bitcoin.h>
+#include <test/test_syscoin.h>
 
 
 struct InitWalletDirTestingSetup: public BasicTestingSetup {
@@ -21,4 +21,4 @@ struct InitWalletDirTestingSetup: public BasicTestingSetup {
     std::unique_ptr<interfaces::ChainClient> m_chain_client;
 };
 
-#endif // BITCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H
+#endif // SYSCOIN_WALLET_TEST_INIT_TEST_FIXTURE_H

@@ -1,4 +1,4 @@
-## PGP keys of Gitian builders and Developers
+﻿## PGP keys of Gitian builders and Developers
 
 The file `keys.txt` contains fingerprints of the public keys of Gitian builders
 and active developers.
@@ -24,4 +24,4 @@ while read fingerprint keyholder_name; do gpg --keyserver hkp://subset.pool.sks-
 ```
 
 Add your key to the list if you provided Gitian signatures for two major or
-minor releases of Bitcoin Core.
+minor releases of Syscoin Core.

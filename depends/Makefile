@@ -1,4 +1,4 @@
-.NOTPARALLEL :
+﻿.NOTPARALLEL :
 
 SOURCES_PATH ?= $(BASEDIR)/sources
 WORK_PATH = $(BASEDIR)/work
@@ -8,7 +8,7 @@ NO_QT ?=
 RAPIDCHECK ?=
 NO_WALLET ?=
 NO_UPNP ?=
-FALLBACK_DOWNLOAD_PATH ?= https://bitcoincore.org/depends-sources
+FALLBACK_DOWNLOAD_PATH ?= https://syscoincore.org/depends-sources
 
 BUILD = $(shell ./config.guess)
 HOST ?= $(BUILD)

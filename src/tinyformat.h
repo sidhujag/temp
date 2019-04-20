@@ -1,4 +1,4 @@
-// tinyformat.h
+﻿// tinyformat.h
 // Copyright (C) 2011, Chris Foster [chris42f (at) gmail (d0t) com]
 //
 // Boost Software License - Version 1.0
@@ -1052,7 +1052,7 @@ TINYFORMAT_FOREACH_ARGNUM(TINYFORMAT_MAKE_FORMAT_FUNCS)
 
 #endif
 
-// Added for Bitcoin Core
+// Added for Syscoin Core
 template<typename... Args>
 std::string format(const std::string &fmt, const Args&... args)
 {

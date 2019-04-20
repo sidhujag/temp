@@ -1,13 +1,13 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2018 The Bitcoin Core developers
+﻿// Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2009-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 /**
  * Utilities for converting data from/to strings.
  */
-#ifndef BITCOIN_UTIL_STRENCODINGS_H
-#define BITCOIN_UTIL_STRENCODINGS_H
+#ifndef SYSCOIN_UTIL_STRENCODINGS_H
+#define SYSCOIN_UTIL_STRENCODINGS_H
 
 #include <attributes.h>
 
@@ -241,4 +241,4 @@ constexpr char ToUpper(char c)
  */
 std::string Capitalize(std::string str);
 
-#endif // BITCOIN_UTIL_STRENCODINGS_H
+#endif // SYSCOIN_UTIL_STRENCODINGS_H

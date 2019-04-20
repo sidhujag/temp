@@ -1,9 +1,9 @@
-// Copyright (c) 2018 Daniel Kraft
+﻿// Copyright (c) 2018 Daniel Kraft
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_RPC_AUXPOW_MINER_H
-#define BITCOIN_RPC_AUXPOW_MINER_H
+#ifndef SYSCOIN_RPC_AUXPOW_MINER_H
+#define SYSCOIN_RPC_AUXPOW_MINER_H
 
 #include <miner.h>
 #include <script/script.h>
@@ -92,4 +92,4 @@ public:
 
 };
 
-#endif // BITCOIN_RPC_AUXPOW_MINER_H
+#endif // SYSCOIN_RPC_AUXPOW_MINER_H

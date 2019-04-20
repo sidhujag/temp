@@ -1,4 +1,4 @@
-// Copyright (c) 2014-2019 Daniel Kraft
+﻿// Copyright (c) 2014-2019 Daniel Kraft
 // Distributed under the MIT/X11 software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -17,7 +17,7 @@
 #include <uint256.h>
 #include <univalue.h>
 
-#include <test/test_bitcoin.h>
+#include <test/test_syscoin.h>
 
 #include <boost/test/unit_test.hpp>
 

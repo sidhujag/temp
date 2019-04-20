@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # Copyright (c) 2019 Daniel Kraft
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -8,7 +8,7 @@
 # permanently invalid.  So resubmitting the same block with a valid auxpow
 # should then work fine.
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.blocktools import (
   create_block,
   create_coinbase,
@@ -28,7 +28,7 @@ from test_framework.auxpow_testing import computeAuxpow
 import codecs
 from io import BytesIO
 
-class AuxpowInvalidPoWTest (BitcoinTestFramework):
+class AuxpowInvalidPoWTest (SyscoinTestFramework):
 
   def set_test_params (self):
     self.num_nodes = 1

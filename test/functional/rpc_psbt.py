@@ -1,12 +1,12 @@
-#!/usr/bin/env python3
-# Copyright (c) 2018 The Bitcoin Core developers
+﻿#!/usr/bin/env python3
+# Copyright (c) 2018 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the Partially Signed Transaction RPCs.
 """
 
 from decimal import Decimal
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error, connect_nodes_bi, disconnect_nodes, find_output, sync_blocks
 
 import json
@@ -15,14 +15,14 @@ import os
 MAX_BIP125_RBF_SEQUENCE = 0xfffffffd
 
 # Create one-input, one-output, no-fee transaction:
-class PSBTTest(BitcoinTestFramework):
+class PSBTTest(SyscoinTestFramework):
 
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 3
-        # Upstream Bitcoin has p2sh-segwit as default address type and this
+        # Upstream Syscoin has p2sh-segwit as default address type and this
         # test depends on that.  Since we changed it (for now, pending
-        # segwit activation in Namecoin), explicitly specify the address
+        # segwit activation in Syscoin), explicitly specify the address
         # type for this test.
         self.extra_args = [["-addresstype=p2sh-segwit"]] * self.num_nodes
 
@@ -73,7 +73,7 @@ class PSBTTest(BitcoinTestFramework):
         self.nodes[0].generate (500)
         self.sync_all()
 
-        # Create and fund a raw tx for sending 10 BTC
+        # Create and fund a raw tx for sending 10 SYS
         psbtx1 = self.nodes[0].walletcreatefundedpsbt([], {self.nodes[2].getnewaddress():10})['psbt']
 
         # Node 1 should not be able to add anything to it but still return the psbtx same as before

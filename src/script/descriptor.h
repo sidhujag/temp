@@ -1,9 +1,9 @@
-// Copyright (c) 2018 The Bitcoin Core developers
+﻿// Copyright (c) 2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_SCRIPT_DESCRIPTOR_H
-#define BITCOIN_SCRIPT_DESCRIPTOR_H
+#ifndef SYSCOIN_SCRIPT_DESCRIPTOR_H
+#define SYSCOIN_SCRIPT_DESCRIPTOR_H
 
 #include <script/script.h>
 #include <script/sign.h>
@@ -88,4 +88,4 @@ std::unique_ptr<Descriptor> Parse(const std::string& descriptor, FlatSigningProv
  */
 std::unique_ptr<Descriptor> InferDescriptor(const CScript& script, const SigningProvider& provider);
 
-#endif // BITCOIN_SCRIPT_DESCRIPTOR_H
+#endif // SYSCOIN_SCRIPT_DESCRIPTOR_H

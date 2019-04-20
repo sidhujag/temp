@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <Import Label="configInitTarget" Project="..\common.init.vcxproj" />
   <ItemGroup Label="ProjectConfigurations">
@@ -23,8 +23,8 @@
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{B53A5535-EE9D-4C6F-9A26-F79EE3BC3754}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
-    <RootNamespace>libbitcoin_util</RootNamespace>
-    <ProjectName>libbitcoin_util</ProjectName>
+    <RootNamespace>libsyscoin_util</RootNamespace>
+    <ProjectName>libsyscoin_util</ProjectName>
     <VcpkgTriplet Condition="'$(Platform)'=='Win32'">x86-windows-static</VcpkgTriplet>
     <VcpkgTriplet Condition="'$(Platform)'=='x64'">x64-windows-static</VcpkgTriplet>
   </PropertyGroup>

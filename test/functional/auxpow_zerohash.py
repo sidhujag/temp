@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # Copyright (c) 2019 Daniel Kraft
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -9,7 +9,7 @@
 # always been the case, but the test just makes sure this is explicitly
 # tested for the future as well.)
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.blocktools import (
   create_block,
   create_coinbase,
@@ -54,7 +54,7 @@ class P2PBlockGetter (P2PInterface):
     return self.block
 
 
-class AuxpowZeroHashTest (BitcoinTestFramework):
+class AuxpowZeroHashTest (SyscoinTestFramework):
 
   def set_test_params (self):
     self.num_nodes = 1

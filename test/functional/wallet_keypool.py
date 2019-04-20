@@ -1,18 +1,18 @@
-#!/usr/bin/env python3
-# Copyright (c) 2014-2018 The Bitcoin Core developers
+﻿#!/usr/bin/env python3
+# Copyright (c) 2014-2018 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test the wallet keypool and interaction with wallet encryption/locking."""
 
 import time
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import assert_equal, assert_raises_rpc_error
 
 from test_framework.auxpow import reverseHex
 from test_framework.auxpow_testing import computeAuxpow
 
-class KeyPoolTest(BitcoinTestFramework):
+class KeyPoolTest(SyscoinTestFramework):
     def set_test_params(self):
         self.num_nodes = 1
 

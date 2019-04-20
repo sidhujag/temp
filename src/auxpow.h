@@ -1,11 +1,11 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2014 The Bitcoin developers
+﻿// Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2009-2014 The Syscoin developers
 // Copyright (c) 2014-2019 Daniel Kraft
 // Distributed under the MIT/X11 software license, see the accompanying
 // file license.txt or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_AUXPOW_H
-#define BITCOIN_AUXPOW_H
+#ifndef SYSCOIN_AUXPOW_H
+#define SYSCOIN_AUXPOW_H
 
 #include <consensus/params.h>
 #include <primitives/pureheader.h>
@@ -33,7 +33,7 @@ static const unsigned char pchMergedMiningHeader[] = { 0xfa, 0xbe, 'm', 'm' };
 
 /**
  * Data for the merge-mining auxpow.  This uses a merkle tx (the parent block's
- * coinbase tx) and a second merkle branch to link the actual Namecoin block
+ * coinbase tx) and a second merkle branch to link the actual Syscoin block
  * header to the parent block header, which is mined to satisfy the PoW.
  */
 class CAuxPow
@@ -152,4 +152,4 @@ public:
 
 };
 
-#endif // BITCOIN_AUXPOW_H
+#endif // SYSCOIN_AUXPOW_H

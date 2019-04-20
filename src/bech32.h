@@ -1,4 +1,4 @@
-// Copyright (c) 2017 Pieter Wuille
+﻿// Copyright (c) 2017 Pieter Wuille
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
@@ -9,8 +9,8 @@
 //
 // For more information, see BIP 173.
 
-#ifndef BITCOIN_BECH32_H
-#define BITCOIN_BECH32_H
+#ifndef SYSCOIN_BECH32_H
+#define SYSCOIN_BECH32_H
 
 #include <stdint.h>
 #include <string>
@@ -27,4 +27,4 @@ std::pair<std::string, std::vector<uint8_t>> Decode(const std::string& str);
 
 } // namespace bech32
 
-#endif // BITCOIN_BECH32_H
+#endif // SYSCOIN_BECH32_H

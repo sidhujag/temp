@@ -1,4 +1,4 @@
-Tooling for verification of PGP signed commits
+﻿Tooling for verification of PGP signed commits
 ----------------------------------------------
 
 This is an incomplete work in progress, but currently includes a pre-push hook
@@ -53,5 +53,5 @@ file, individual commits which were signed by such a key can be added to the
 `allow-revsig-commits` file. That way, the PGP signatures are still verified
 but no new commits can be signed by any expired/revoked key. To easily build a
 list of commits which need to be added, verify-commits.py can be edited to test
-each commit with BITCOIN_VERIFY_COMMITS_ALLOW_REVSIG set to both 1 and 0, and
+each commit with SYSCOIN_VERIFY_COMMITS_ALLOW_REVSIG set to both 1 and 0, and
 those which need it set to 1 printed.

@@ -1,11 +1,11 @@
-/**********************************************************************
+﻿/**********************************************************************
  * Copyright (c) 2013, 2014 Pieter Wuille                             *
  * Distributed under the MIT software license, see the accompanying   *
  * file COPYING or http://www.opensource.org/licenses/mit-license.php.*
  **********************************************************************/
 
-#ifndef BITCOIN_LIBSECP256K1_CONFIG_H
-#define BITCOIN_LIBSECP256K1_CONFIG_H
+#ifndef SYSCOIN_LIBSECP256K1_CONFIG_H
+#define SYSCOIN_LIBSECP256K1_CONFIG_H
 
 #undef USE_ASM_X86_64
 #undef USE_ENDOMORPHISM
@@ -26,4 +26,4 @@
 #define USE_FIELD_10X26 1
 #define USE_SCALAR_8X32 1
 
-#endif /* BITCOIN_LIBSECP256K1_CONFIG_H */
+#endif /* SYSCOIN_LIBSECP256K1_CONFIG_H */

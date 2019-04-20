@@ -1,4 +1,4 @@
-This folder contains lint scripts.
+﻿This folder contains lint scripts.
 
 check-doc.py
 ============
@@ -15,10 +15,10 @@ the commit it claims to have been updated to.
 
 To use, make sure that you have fetched the upstream repository branch in which the subtree is
 maintained:
-* for `src/secp256k1`: https://github.com/bitcoin-core/secp256k1.git (branch master)
-* for `src/leveldb`: https://github.com/bitcoin-core/leveldb.git (branch bitcoin-fork)
-* for `src/univalue`: https://github.com/bitcoin-core/univalue.git (branch master)
-* for `src/crypto/ctaes`: https://github.com/bitcoin-core/ctaes.git (branch master)
+* for `src/secp256k1`: https://github.com/syscoin-core/secp256k1.git (branch master)
+* for `src/leveldb`: https://github.com/syscoin-core/leveldb.git (branch syscoin-fork)
+* for `src/univalue`: https://github.com/syscoin-core/univalue.git (branch master)
+* for `src/crypto/ctaes`: https://github.com/syscoin-core/ctaes.git (branch master)
 
 Usage: `git-subtree-check.sh DIR (COMMIT)`
 

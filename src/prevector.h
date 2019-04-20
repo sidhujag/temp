@@ -1,9 +1,9 @@
-// Copyright (c) 2015-2018 The Bitcoin Core developers
+﻿// Copyright (c) 2015-2018 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_PREVECTOR_H
-#define BITCOIN_PREVECTOR_H
+#ifndef SYSCOIN_PREVECTOR_H
+#define SYSCOIN_PREVECTOR_H
 
 #include <assert.h>
 #include <stdlib.h>
@@ -510,4 +510,4 @@ public:
 };
 #pragma pack(pop)
 
-#endif // BITCOIN_PREVECTOR_H
+#endif // SYSCOIN_PREVECTOR_H

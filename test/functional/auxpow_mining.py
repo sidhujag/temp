@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # Copyright (c) 2014-2019 Daniel Kraft
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -6,7 +6,7 @@
 # Test the merge-mining RPC interface:
 # getauxblock, createauxblock, submitauxblock
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
   assert_equal,
   assert_greater_than_or_equal,
@@ -22,7 +22,7 @@ from test_framework.auxpow_testing import (
 
 from decimal import Decimal
 
-class AuxpowMiningTest (BitcoinTestFramework):
+class AuxpowMiningTest (SyscoinTestFramework):
 
   def set_test_params (self):
     self.num_nodes = 2

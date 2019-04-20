@@ -1,10 +1,10 @@
-// Copyright (c) 2009-2010 Satoshi Nakamoto
-// Copyright (c) 2009-2019 The Bitcoin Core developers
+﻿// Copyright (c) 2009-2010 Satoshi Nakamoto
+// Copyright (c) 2009-2019 The Syscoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#ifndef BITCOIN_NET_H
-#define BITCOIN_NET_H
+#ifndef SYSCOIN_NET_H
+#define SYSCOIN_NET_H
 
 #include <addrdb.h>
 #include <addrman.h>
@@ -53,7 +53,7 @@ static const unsigned int MAX_LOCATOR_SZ = 101;
 static const unsigned int MAX_ADDR_TO_SEND = 1000;
 /**
  * Maximum length of incoming protocol messages (no message over 32 MiB is
- * currently acceptable).  Bitcoin has 4 MiB here, but we need more space
+ * currently acceptable).  Syscoin has 4 MiB here, but we need more space
  * to allow for 2,000 block headers with auxpow.
  */
 /* FIXME: Once the headers size limit is deployed sufficiently in the network,
@@ -894,4 +894,4 @@ public:
 /** Return a timestamp in the future (in microseconds) for exponentially distributed events. */
 int64_t PoissonNextSend(int64_t now, int average_interval_seconds);
 
-#endif // BITCOIN_NET_H
+#endif // SYSCOIN_NET_H

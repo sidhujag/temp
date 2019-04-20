@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 # Copyright (c) 2014-2018 Daniel Kraft
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
@@ -68,7 +68,7 @@ def finishAuxpow (tx, header):
 
 def doubleHashHex (data):
   """
-  Perform Bitcoin's Double-SHA256 hash on the given hex string.
+  Perform Syscoin's Double-SHA256 hash on the given hex string.
   """
 
   hasher = hashlib.sha256 ()

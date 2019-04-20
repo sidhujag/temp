@@ -1,17 +1,17 @@
-#!/usr/bin/env python3
-# Copyright (c) 2018 The Bitcoin Core developers
+﻿#!/usr/bin/env python3
+# Copyright (c) 2018 The Syscoin Core developers
 # Distributed under the MIT software license, see the accompanying
 # file COPYING or http://www.opensource.org/licenses/mit-license.php.
 """Test createwallet arguments.
 """
 
-from test_framework.test_framework import BitcoinTestFramework
+from test_framework.test_framework import SyscoinTestFramework
 from test_framework.util import (
     assert_equal,
     assert_raises_rpc_error,
 )
 
-class CreateWalletTest(BitcoinTestFramework):
+class CreateWalletTest(SyscoinTestFramework):
     def set_test_params(self):
         self.setup_clean_chain = False
         self.num_nodes = 1

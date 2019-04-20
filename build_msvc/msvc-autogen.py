@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+﻿#!/usr/bin/env python3
 
 import os
 import re
@@ -6,14 +6,14 @@ import re
 SOURCE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'src'))
 
 libs = [
-    'libbitcoin_cli',
-    'libbitcoin_common',
-    'libbitcoin_crypto',
-    'libbitcoin_server',
-    'libbitcoin_util',
-    'libbitcoin_wallet_tool',
-    'libbitcoin_wallet',
-    'libbitcoin_zmq',
+    'libsyscoin_cli',
+    'libsyscoin_common',
+    'libsyscoin_crypto',
+    'libsyscoin_server',
+    'libsyscoin_util',
+    'libsyscoin_wallet_tool',
+    'libsyscoin_wallet',
+    'libsyscoin_zmq',
 ]
 
 ignore_list = [
